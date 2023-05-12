@@ -129,11 +129,11 @@ def convert_to_numeric(df):
     return df
 
 
-# testing  NDARINV05ATJ1V1_ses-baselineYear1Arm1
+# testing
 #in_dir = '/Users/michaeldemidenko/Downloads'
 #out_dir = '/Users/michaeldemidenko/Downloads'
-#sub = 'NDARINV0DYF4WPG'
-#ses = 'baselineYear1Arm1'
+#sub = '##'
+#ses = '##'
 #run = '01'
 #task = 'MID'
 

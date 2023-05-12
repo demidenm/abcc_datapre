@@ -34,8 +34,8 @@ task = args.task
 #out_dir = '/Users/michaeldemidenko/sherlock/data/AHRB/derivatives/analyses/proj_midinvar/mid_qc/files'
 #in_dir = '/Users/michaeldemidenko/Downloads'
 #out_dir = '/Users/michaeldemidenko/Downloads'
-#sub = 'NDARINV33AC40WZ'
-#ses = '2YearFollowUpYArm1'
+#sub = '##'
+#ses = '##'
 
 # fine all files
 files = glob(f"{in_dir}/sub-{sub}_ses-{ses}_task-${task}_run-0*_events.tsv", recursive=True)
