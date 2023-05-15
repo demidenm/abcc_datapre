@@ -27,11 +27,11 @@ ses = args.ses
 
 
 # Define input directory
-#in_dir = '/Users/michaeldemidenko/Downloads'
-#out_dir = '/Users/michaeldemidenko/Downloads'
+in_dir = '/Users/michaeldemidenko/Downloads'
+out_dir = '/Users/michaeldemidenko/Downloads'
 #in_dir = './beh_qc'
 #out_dir = './beh_html'
-#ses = "2YearFollowUpYArm1"
+ses = "2YearFollowUpYArm1"
 
 
 # Get a list of all files in the directory

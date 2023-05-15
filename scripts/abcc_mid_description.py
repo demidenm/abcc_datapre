@@ -29,16 +29,15 @@ sub = args.sub
 ses = args.ses
 task = args.task
 
-# test
-#in_dir = '/home/faird/mdemiden/slurm_ABCD_s3/Beh_Data/yr2_run1'
-#out_dir = '/Users/michaeldemidenko/sherlock/data/AHRB/derivatives/analyses/proj_midinvar/mid_qc/files'
+# test sub,ses,task
 #in_dir = '/Users/michaeldemidenko/Downloads'
 #out_dir = '/Users/michaeldemidenko/Downloads'
-#sub = '##'
+#sub =  '##'
 #ses = '##'
+#task= 'SST'
 
 # fine all files
-files = glob(f"{in_dir}/sub-{sub}_ses-{ses}_task-${task}_run-0*_events.tsv", recursive=True)
+files = glob(f"{in_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0*_events.tsv", recursive=True)
 
 
 if task == "MID":
@@ -52,7 +51,7 @@ if task == "MID":
 
     # create empty variables to save values to
     mid_descr = {}
-    mid_fig_combined, axes = plt.subplots(nrows=2, ncols=5, figsize=(18, 10))
+    mid_fig_combined, axes = plt.subplots(nrows=2, ncols=6, figsize=(30, 12))
     
     for i, file_name in enumerate(files):
         # Load the file into a DataFrame
@@ -62,8 +61,15 @@ if task == "MID":
             mrt = probe_mrt[1]
         else:
             mrt = probe_mrt[0]
+            
+        # Replace to distinguish hit/miss for neutral
+        # e.g. 'No money at stake!' with 'Neutral Hit' for trial_accuracy == 1
+        df.loc[(df['Result'] == 'No money at stake!') & (df[trial_accuracy] == 1), 'Result'] = 'Neutral Hit'
+
+        # e.g. 'No money at stake!' with 'Neutral Miss' for trial_accuracy == 0
+        df.loc[(df['Result'] == 'No money at stake!') & (df[trial_accuracy] == 0), 'Result'] = 'Neutral Miss'
         
-        # running accuracy not extracted into .tsf for MID from AHRB, calculate here.
+        # running accuracy not extracted into .tsv for MID from AHRB, calculate here.
         cumulative_hits = df[trial_accuracy].cumsum()
         cumulative_trials = pd.Series(range(1, len(df) + 1))
         running_accuracy = cumulative_hits / cumulative_trials
@@ -127,7 +133,7 @@ if task == "MID":
         
         # Create a line plot of MRT by SubTrial
         rt_plot = non_zero_df.plot(x=trial_n, y=mrt, ax=axes[i, 3])
-        axes[i, 3].set_ylim([50, 500])
+        axes[i, 3].set_ylim([50, 650])
         axes[i, 3].set_ylabel('RT (ms)')
         axes[i, 3].set_title(f'Run 0{i+1} \n RT Plot \n (Removed NAs/Zeros: {RT_zero_na})')
         
@@ -136,11 +142,37 @@ if task == "MID":
         grouped_mrt = non_zero_df.groupby(cue_type)[mrt].mean()
         mrt_cond_plot = axes[i, 4].bar(grouped_mrt.index, grouped_mrt.values)
         axes[i, 4].axhline(mrt_no_nazero, color='r', linestyle='dashed')
-        axes[i, 4].set_ylim([50, 500])
+        axes[i, 4].set_ylim([50, 650])
         axes[i, 4].set_ylabel('RT (ms)')
         axes[i, 4].set_title(f'Run 0{i+1} \n RT by Condition \n (Removed NAs/zeros: {RT_zero_na})')
         axes[i, 4].tick_params(axis='x', rotation=45, labelsize=10)
-    
+        
+        # Create feedback counts
+        # create a list of conditions in the desired order
+        feedback_order = ['You earn $5!','You did not earn $5!','You earn $0.20!','You did not earn $0.20!',
+                          'Neutral Hit', 'Neutral Miss',
+                          'You keep $5!', 'You lose $5!','You lose $0.20!','You keep $0.20!'
+                         ]
+        feedback_ord_abv = ['Earn $5','Didnt earn $5','Earn $0.20','Didnt earn $0.20',
+                          'Neutral Hit', 'Neutral Miss',
+                          'Keep $5', 'Lose $5','Lose $0.20','Keep $0.20']
+                
+        # create a list of values corresponding to the condition order
+        feedback_values = [counts_per_result[c] for c in feedback_order]
+        
+        # create bar plot of counts_per_result with ordered conditions
+        result_group = axes[i, 5].bar(feedback_order, feedback_values)
+        
+        # set x-axis tick labels
+        axes[i, 5].set_xticklabels(feedback_ord_abv)
+        
+        # set plot limits, title, and labels
+        axes[i, 5].set_ylim([0, 10])
+        axes[i, 5].set_title(f'Run 0{i+1} \n Feedback Hit/Miss')
+        axes[i, 5].set_xlabel('Condition Type')
+        axes[i, 5].set_ylabel('Count (n)')
+        axes[i, 5].tick_params(axis='x', rotation=45, labelsize=8)
+        
         # Create a dictionary to store the calculated values for this run
         data = {
             'Total Trials': total_trial_count,        
@@ -159,9 +191,153 @@ if task == "MID":
     # Create combined figures. First, generate subtile. Then add the subplots
     # making tight layout and then save out png
     mid_fig_combined.tight_layout()
-    mid_fig_combined.savefig(f"{out_dir}/sub-{sub}_ses-{ses}_task-${task}_plot-combined.png")
+    mid_fig_combined.savefig(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_plot-combined.png")
     
     # Writeout the .json file for each mid description
-    with open(f"{out_dir}/sub-{sub}_ses-{ses}_task-${task}_beh-descr.json", 'w') as f:
+    with open(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_beh-descr.json", 'w') as f:
         json.dump(mid_descr, f, indent=4)
+        
+elif task == "SST":
+    # column names, specify
+    lab_trial_n = 'Trial'
+    lab_trial_type = 'TrialCode'
+    lab_go_rt = 'Go.RT'
+    lab_go_accuray = 'Go.ACC'
+    lab_ssd_rt = 'SSD.RT'
+    lab_stopsig_rt = 'StopSignal.RT'
+    lab_stopsig_accuacy = 'StopSignal.ACC'
+    lab_ssd_duration = 'SSDDur'
+    
+    # create empty variables to save values to
+    sst_descr = {}
+    sst_fig_combined, axes = plt.subplots(nrows=2, ncols=6, figsize=(25, 13))
+    
+    for i, file_name in enumerate(files):
+        # Load the file into a DataFrame
+        df = pd.read_csv(file_name, sep ='\t')
+        
+        # calculating values for jsons
+        # n trial types 
+        trialtype_count = {k: v for k, v in df[lab_trial_type].value_counts().items() 
+                           if k not in ['BeginFix', 'EndFix']}
 
+        
+        # accuracies for Go, StopSignal
+        go_acc = df[lab_go_accuray].mean()
+        stopsig_acc = df[lab_stopsig_accuacy].mean()
+        
+        # mrt for Go, SSD and StopSignal
+        go_mrt = df[lab_go_rt].mean()
+        ssd_mrt = df.loc[df[lab_trial_type] == 'IncorrectStop', lab_ssd_rt].mean()
+        stopsig_mrt = df.loc[df[lab_trial_type] == 'IncorrectStop', lab_stopsig_rt].mean()
+        
+        # durations, SSD
+        min_value = df[lab_ssd_duration].min(skipna=True)
+        max_value = df[lab_ssd_duration].max(skipna=True)
+        mean_value = df[lab_ssd_duration].mean(skipna=True)
+        
+        ssd_dict = {'min': min_value, 'max': max_value, 'mean': mean_value}
+        
+        
+        # Create a dictionary to store the calculated values for this run
+        data = {
+            'Total Trial Types': trialtype_count,        
+            'Go Accuracy': go_acc,
+            'Go MRT': go_mrt,
+            'Stop Signal Accuracy': stopsig_acc,
+            'Stop Signal MRT': stopsig_mrt,
+            'Stop Signal Delay MRT': ssd_mrt,
+            'Stop Signal Delay Durations': ssd_dict
+        }
+    
+        # Add the data for this run to the dictionary of all data
+        sst_descr[f'Run {i+1}'] = data
+        
+        ## Plotting figures
+        
+        # Plot1: trial types bar
+        x_axis = list(trialtype_count.keys())
+        y_axis = list(trialtype_count.values())
+        bar_trialtypes = axes[i, 0].bar(x_axis, y_axis, align='center')
+        axes[i, 0].set_ylim([0, 150])
+        axes[i, 0].set_ylabel('Count (N)')
+        axes[i, 0].set_xlabel('Trial Type')
+        axes[i, 0].set_title(f'Run 0{i+1} \n Count by Trial Type')
+        axes[i, 0].tick_params(axis='x', rotation=45, labelsize=10)
+        
+        # Plot2: RTs across condition Go, SSD, StopSig
+        go_rt = df[lab_go_rt].where(lambda x: x != 0).dropna()
+        ssd_rt = df[lab_ssd_rt].where(lambda x: x != 0).dropna()
+        stop_rt = df[lab_stopsig_rt].where(lambda x: x != 0).dropna()
+        go_n = go_rt.count()
+        ssd_n = ssd_rt.count()
+        stop_n = stop_rt.count()
+        
+        # create a list of the three variables
+        rt_non_nanzero_data = [go_rt, ssd_rt, stop_rt]
+        # plot the data in one boxplot with a custom color
+        rt_non_nanzero = axes[i, 1].boxplot(rt_non_nanzero_data, patch_artist=True, 
+                                            boxprops=dict(facecolor='#1f77b4'),
+                                            medianprops=dict(color='white'))
+        for box in rt_non_nanzero['boxes']:
+            box.set(edgecolor='#1f77b4', linewidth=1.5)
+        
+        axes[i, 1].set_ylim([0, 1000])
+        axes[i, 1].set_title(f'Run 0{i+1} \n RTs Across Trial Types \n Go (n:{go_n}), SSD (n:{ssd_n}), StopSig (n:{stop_n})')
+        axes[i, 1].set_xlabel('Condition Type')
+        axes[i, 1].set_xticklabels(['Go.RT', 'SSD.RT', 'StopSignal.RT'])
+        axes[i, 1].set_ylabel('RT (ms)')
+        
+        # Plot3: RTs across time:
+        axes[i, 2].set_xlabel('Trial')
+        axes[i, 2].set_ylabel('RT (ms)')
+        axes[i, 2].set_title(f'Run 0{i+1} \n RTs Across Trials \n Go (n:{go_n}), SSD (n:{ssd_n}), StopSig (n:{stop_n})')
+
+        # plot the data for each variable as a line plot
+        axes[i, 2].plot(go_rt.index, go_rt.values, label='Go.RT')
+        axes[i, 2].plot(ssd_rt.index, ssd_rt.values, label='SSD.RT')
+        axes[i, 2].plot(stop_rt.index, stop_rt.values, label='StopSignal.RT')
+        axes[i, 2].legend(loc='upper left', fontsize='small')
+        
+        # Plot3: RT distributions across Go/Stop trials
+        df['Go_or_stop'] = df['TrialCode'].map({'CorrectGo': 'GoTrial', 'IncorrectGo': 'GoTrial',
+                                        'CorrectStop': 'StopTrial', 'IncorrectStop': 'StopTrial'})
+        
+        go_data = df.loc[df['Go_or_stop'] == 'GoTrial', 'Go.Duration']
+        ssd_data = df.loc[df['Go_or_stop'] == 'StopTrial', 'SSDDur']
+        stop_signal_data = df.loc[df['Go_or_stop'] == 'StopTrial', 'StopSignal.Duration']
+        
+        # create a histogram for Go.Duration
+        n1, bins1, patches1 = axes[i,3].hist(x=go_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='Go.Duration')
+        axes[i, 3].bar(bins1[:-1], n1, width=10, align='edge', color='#1f77b4')
+        axes[i, 3].set_xlabel('Go Duration \n If block start at 1 in sec')
+        axes[i, 3].set_ylabel('Frequency')
+        axes[i, 3].set_ylim([0,160])
+        axes[i, 3].set_title(f'Run 0{i+1} \n Go Trial Durations \n (Go n:{go_data.count()})')
+        
+        # create a histogram for SSDDur
+        n2, bins2, patches2 = axes[i,4].hist(x=ssd_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='SSDDur')
+        axes[i, 4].bar(bins2[:-1], n2, width=10, align='edge', color='#1f77b4')
+        axes[i, 4].set_xlabel('Stop Signal Delay Duration (ms)')
+        axes[i, 4].set_ylabel('Frequency')
+        axes[i, 4].set_ylim([0,160])
+        axes[i, 4].set_title(f'Run 0{i+1} \n Stop Signal Delay Durations \n (SSD n:{ssd_data.count()})')
+        
+        # create a histogram for StopSignal.Duration
+        n3, bins3, patches3 = axes[i,5].hist(x=stop_signal_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='StopSignal.Duration')
+        axes[i, 5].bar(bins3[:-1], n3, width=10, align='edge', color='#1f77b4')
+        axes[i, 5].set_xlabel('Stop Signal Duration (ms)')
+        axes[i, 5].set_ylabel('Frequency')
+        axes[i, 5].set_ylim([0,160])
+        axes[i, 5].set_title(f'Run 0{i+1} \n Stop Signal Durations \n (StopSig n:{stop_signal_data.count()})')
+
+        
+        # making tight layout and then save out png
+        sst_fig_combined.tight_layout()
+        sst_fig_combined.savefig(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_plot-combined.png")
+        
+        # Writeout the .json file for each mid description
+        with open(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_beh-descr.json", 'w') as f:
+            json.dump(sst_descr, f, indent=4)
+        
+        
