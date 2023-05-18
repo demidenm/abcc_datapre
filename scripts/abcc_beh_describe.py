@@ -1,8 +1,23 @@
 import argparse
 import json
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from glob import glob
+
+def convert_to_numeric(df):
+    """
+    Convert all object columns in the pd dataframe to numeric values.
+
+    """
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            try:
+                df[col] = pd.to_numeric(df[col])
+            except ValueError:
+                pass
+    return df
+
 
 # Create ArgumentParser object
 parser = argparse.ArgumentParser(description="This script runs and converts the .txt events data to events.tsv for each MID run.")
@@ -29,11 +44,11 @@ sub = args.sub
 ses = args.ses
 task = args.task
 
-# test sub,ses,task
+# test sub,ses,task 
 #in_dir = '/Users/michaeldemidenko/Downloads'
 #out_dir = '/Users/michaeldemidenko/Downloads'
-#sub =  '##'
-#ses = '##'
+#sub = '#'
+#ses = '#'
 #task= 'SST'
 
 # fine all files
@@ -51,16 +66,32 @@ if task == "MID":
 
     # create empty variables to save values to
     mid_descr = {}
-    mid_fig_combined, axes = plt.subplots(nrows=2, ncols=6, figsize=(30, 12))
+    mid_fig_combined, axes = plt.subplots(nrows=2, ncols=7, figsize=(30, 14))
+    
+    def map_condition_to_reward_category(condition):
+        if condition in ['LgReward', 'SmallReward']:
+            return 'gain'
+        elif condition in ['LgPun', 'SmallPun']:
+            return 'loss'
+        elif condition == 'Triangle':
+            return 'neutral'
+        else:
+            return np.nan
+        
     
     for i, file_name in enumerate(files):
         # Load the file into a DataFrame
         df = pd.read_csv(file_name, sep ='\t')
         
+        
         if probe_mrt[1] in df.columns:
             mrt = probe_mrt[1]
         else:
             mrt = probe_mrt[0]
+            
+        # create neew gain, loss, neutral general column
+        df['RewCat'] = df[cue_type].apply(map_condition_to_reward_category)
+        df['TrialwiseCat'] = df['RewCat'].shift() + '-' + df['RewCat']
             
         # Replace to distinguish hit/miss for neutral
         # e.g. 'No money at stake!' with 'Neutral Hit' for trial_accuracy == 1
@@ -70,9 +101,24 @@ if task == "MID":
         df.loc[(df['Result'] == 'No money at stake!') & (df[trial_accuracy] == 0), 'Result'] = 'Neutral Miss'
         
         # running accuracy not extracted into .tsv for MID from AHRB, calculate here.
-        cumulative_hits = df[trial_accuracy].cumsum()
-        cumulative_trials = pd.Series(range(1, len(df) + 1))
-        running_accuracy = cumulative_hits / cumulative_trials
+        #cumulative_hits = df[trial_accuracy].dropna().cumsum()
+        #cumulative_trials = pd.Series(range(1, len(df) + 1))
+        
+        
+        try:
+            cumulative_hits = df[trial_accuracy].astype(int).cumsum()
+            cumulative_trials = pd.Series(range(1, len(df) + 1))
+            running_accuracy = cumulative_hits / cumulative_trials
+        except (TypeError, ValueError):
+            # scenrio adjusting for when trials are missing values and have '?' or 'nan' values
+            df = df.dropna(subset=['Cue.OnsetTime', 'Anticipation.OnsetTime', 'Anticipation.Duration', 'Feedback.OnsetTime'])
+            df = convert_to_numeric(df)
+            cumulative_hits = df[trial_accuracy].astype(int).cumsum()
+            cumulative_trials = pd.Series(range(1, len(df) + 1))
+            cumulative_hits = cumulative_hits.astype(float)
+            cumulative_trials = cumulative_trials.astype(float)
+            running_accuracy = cumulative_hits / cumulative_trials
+            
         df[run_accuracy] = running_accuracy*100
         
         # create subtrial column (e.g. len rows)
@@ -83,6 +129,14 @@ if task == "MID":
         counts_per_condition = df[cue_type].value_counts().to_dict()
         counts_per_result = df[feedback_type].value_counts().to_dict()
         
+        # trial sequences
+        trialwise_seq_counts = df['TrialwiseCat'].value_counts().to_dict()
+        
+        try:
+            trial_order_n = df['TrialOrder'].unique().astype(int)
+        except KeyError:
+            trial_order_n = np.array([999])
+            
         # Calculate the sum of the counts for total trial count
         total_trial_count = sum(counts_per_condition.values())
         
@@ -95,7 +149,7 @@ if task == "MID":
         # Calculate the overall average of prbacc
         overall_avg = df[trial_accuracy].mean()
     
-        ## Create a bar plot of the grouped means and add a line for the overall average
+        ## plot1: Create a bar plot of the grouped means and add a line for the overall average
         grouped_plot = axes[i, 0].bar(grouped_hit.index, grouped_hit.values)
         axes[i, 0].axhline(overall_avg, color='r', linestyle='dashed')
         axes[i, 0].axhline(0.6, color='k', linestyle='solid')
@@ -104,18 +158,19 @@ if task == "MID":
         axes[i, 0].set_title(f'Run 0{i+1} \n Accuracy by Condition \n (red: avg across all; black: target)')
         axes[i, 0].tick_params(axis='x', rotation=45, labelsize=10)
     
-        # Create a line plot of PECENT ACCURACY by SubTrial
+        # plot2: reate a line plot of PECENT ACCURACY by SubTrial
         accuracy_plot = df.plot(x=trial_n, y=run_accuracy, ax=axes[i, 1])
         axes[i, 1].set_ylim([0, 100])
         axes[i, 1].set_ylabel('Accuracy (%)')
         axes[i, 1].set_title(f'Run 0{i+1} \n Accuracy Plot \n (Percent Accuracy: {df[run_accuracy].iloc[-1]:.2f}%)')
         
-        # Create a plot of RT across hit/miss
+        # plot3: create a plot of RT across hit/miss
         grouped_df = df.groupby(trial_accuracy)[mrt].agg(['mean', 'std'])
         grouped_df.plot(kind='bar', y='mean', yerr='std', ax=axes[i, 2], legend=False)
         # set x-axis tick labels
+        axes[i, 2].set_xticks([0, 1])
         axes[i, 2].set_xticklabels(['Miss', 'Hit'])
-        axes[i, 2].set_ylim([50, 500])
+        axes[i, 2].set_ylim([50, 600])
         axes[i, 2].set_title(f'Run 0{i+1} \n Mean and SD for Probe \n across Hit/Miss')
         axes[i, 2].set_xlabel('Probe Hit/Miss')
         axes[i, 2].set_ylabel('RT (ms)')
@@ -158,7 +213,7 @@ if task == "MID":
                           'Keep $5', 'Lose $5','Lose $0.20','Keep $0.20']
                 
         # create a list of values corresponding to the condition order
-        feedback_values = [counts_per_result[c] for c in feedback_order]
+        feedback_values = [counts_per_result.get(c,0) for c in feedback_order]
         
         # create bar plot of counts_per_result with ordered conditions
         result_group = axes[i, 5].bar(feedback_order, feedback_values)
@@ -173,9 +228,21 @@ if task == "MID":
         axes[i, 5].set_ylabel('Count (n)')
         axes[i, 5].tick_params(axis='x', rotation=45, labelsize=8)
         
+        # plot 6 sequence
+        order_plot = axes[i, 6].bar(trialwise_seq_counts.keys(), trialwise_seq_counts.values())
+
+        # Add labels and title
+        axes[i, 6].set_title(f'Run 0{i+1} \n T + T+1 Reward Category  \n Task Order: {trial_order_n}')
+        axes[i, 6].set_ylim([0, 15])
+        axes[i, 6].set_xlabel('T to T+1 Category')
+        axes[i, 6].set_ylabel('Count (n)')
+        axes[i, 6].tick_params(axis='x', rotation=45, labelsize=8)
+        
         # Create a dictionary to store the calculated values for this run
         data = {
-            'Total Trials': total_trial_count,        
+            'Total Trials': total_trial_count,
+            'Trial Order': trial_order_n.tolist(),
+            'Trialwise Sequence': trialwise_seq_counts,
             'Trials Per Cue Condition': counts_per_condition,
             'Trials Per Feedback Condition': counts_per_result,
             'Accuracy by Cue Condition': grouped_hit.to_dict(),
@@ -210,7 +277,7 @@ elif task == "SST":
     
     # create empty variables to save values to
     sst_descr = {}
-    sst_fig_combined, axes = plt.subplots(nrows=2, ncols=6, figsize=(25, 13))
+    sst_fig_combined, axes = plt.subplots(nrows=2, ncols=5, figsize=(24, 12))
     
     for i, file_name in enumerate(files):
         # Load the file into a DataFrame
@@ -282,11 +349,12 @@ elif task == "SST":
         for box in rt_non_nanzero['boxes']:
             box.set(edgecolor='#1f77b4', linewidth=1.5)
         
-        axes[i, 1].set_ylim([0, 1000])
+        axes[i, 1].set_ylim([0, 1250])
         axes[i, 1].set_title(f'Run 0{i+1} \n RTs Across Trial Types \n Go (n:{go_n}), SSD (n:{ssd_n}), StopSig (n:{stop_n})')
         axes[i, 1].set_xlabel('Condition Type')
-        axes[i, 1].set_xticklabels(['Go.RT', 'SSD.RT', 'StopSignal.RT'])
+        axes[i, 1].set_xticklabels(['Go RT', 'Stop Sig Delay RT', 'Stop Signal RT'])
         axes[i, 1].set_ylabel('RT (ms)')
+        axes[i, 1].tick_params(axis='x', rotation=30, labelsize=10)
         
         # Plot3: RTs across time:
         axes[i, 2].set_xlabel('Trial')
@@ -308,28 +376,28 @@ elif task == "SST":
         stop_signal_data = df.loc[df['Go_or_stop'] == 'StopTrial', 'StopSignal.Duration']
         
         # create a histogram for Go.Duration
-        n1, bins1, patches1 = axes[i,3].hist(x=go_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='Go.Duration')
-        axes[i, 3].bar(bins1[:-1], n1, width=10, align='edge', color='#1f77b4')
-        axes[i, 3].set_xlabel('Go Duration \n If block start at 1 in sec')
-        axes[i, 3].set_ylabel('Frequency')
-        axes[i, 3].set_ylim([0,160])
-        axes[i, 3].set_title(f'Run 0{i+1} \n Go Trial Durations \n (Go n:{go_data.count()})')
+        #n1, bins1, patches1 = axes[i,3].hist(x=go_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='Go.Duration')
+        #axes[i, 3].bar(bins1[:-1], n1, width=10, align='edge', color='#1f77b4')
+        #axes[i, 3].set_xlabel('Go Duration \n If block start at 1 in sec')
+        #axes[i, 3].set_ylabel('Frequency')
+        #axes[i, 3].set_ylim([0,160])
+        #axes[i, 3].set_title(f'Run 0{i+1} \n Go Trial Durations \n (Go n:{go_data.count()})')
         
         # create a histogram for SSDDur
-        n2, bins2, patches2 = axes[i,4].hist(x=ssd_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='SSDDur')
-        axes[i, 4].bar(bins2[:-1], n2, width=10, align='edge', color='#1f77b4')
-        axes[i, 4].set_xlabel('Stop Signal Delay Duration (ms)')
-        axes[i, 4].set_ylabel('Frequency')
-        axes[i, 4].set_ylim([0,160])
-        axes[i, 4].set_title(f'Run 0{i+1} \n Stop Signal Delay Durations \n (SSD n:{ssd_data.count()})')
+        n2, bins2, patches2 = axes[i,3].hist(x=ssd_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='SSDDur')
+        axes[i, 3].bar(bins2[:-1], n2, width=10, align='edge', color='#1f77b4')
+        axes[i, 3].set_xlabel('Stop Signal Delay Duration (ms)')
+        axes[i, 3].set_ylabel('Frequency')
+        axes[i, 3].set_ylim([0,30])
+        axes[i, 3].set_title(f'Run 0{i+1} \n Stop Signal Delay Durations \n (SSD n:{ssd_data.count()})')
         
         # create a histogram for StopSignal.Duration
-        n3, bins3, patches3 = axes[i,5].hist(x=stop_signal_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='StopSignal.Duration')
-        axes[i, 5].bar(bins3[:-1], n3, width=10, align='edge', color='#1f77b4')
-        axes[i, 5].set_xlabel('Stop Signal Duration (ms)')
-        axes[i, 5].set_ylabel('Frequency')
-        axes[i, 5].set_ylim([0,160])
-        axes[i, 5].set_title(f'Run 0{i+1} \n Stop Signal Durations \n (StopSig n:{stop_signal_data.count()})')
+        n3, bins3, patches3 = axes[i,4].hist(x=stop_signal_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='StopSignal.Duration')
+        axes[i, 4].bar(bins3[:-1], n3, width=10, align='edge', color='#1f77b4')
+        axes[i, 4].set_xlabel('Stop Signal Duration (ms)')
+        axes[i, 4].set_ylabel('Frequency')
+        axes[i, 4].set_ylim([0,50])
+        axes[i, 4].set_title(f'Run 0{i+1} \n Stop Signal Durations \n (StopSig n:{stop_signal_data.count()})')
 
         
         # making tight layout and then save out png
@@ -338,6 +406,5 @@ elif task == "SST":
         
         # Writeout the .json file for each mid description
         with open(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_beh-descr.json", 'w') as f:
-            json.dump(sst_descr, f, indent=4)
-        
+            json.dump(sst_descr, f, indent=4)        
         
