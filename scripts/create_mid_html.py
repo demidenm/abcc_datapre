@@ -2,6 +2,7 @@ import os
 import argparse
 import json
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -71,8 +72,14 @@ for j in jsons:
         acc_cond_run1 = data['Run 1']['Accuracy by Cue Condition']
 
         # Add the extracted data to the pandas DataFrame
-        df.loc[len(df)] = ['Run 1', mean_rt_run1, accuracy_run1,acc_cond_run1['LgReward'], acc_cond_run1['LgPun'], 
-                           acc_cond_run1['Triangle'], acc_cond_run1['SmallReward'], acc_cond_run1['SmallPun']]
+        df.loc[len(df)] = ['Run 1',
+                   mean_rt_run1,
+                   accuracy_run1,
+                   acc_cond_run1.get('LgReward', np.nan),
+                   acc_cond_run1.get('LgPun', np.nan),
+                   acc_cond_run1.get('Triangle', np.nan),
+                   acc_cond_run1.get('SmallReward', np.nan),
+                   acc_cond_run1.get('SmallPun', np.nan)]
     else:
         r1_miss=r1_miss+1
         
@@ -86,8 +93,14 @@ for j in jsons:
         acc_cond_run2 = data['Run 2']['Accuracy by Cue Condition']
         
         # Add the extracted data to the pandas DataFrame
-        df.loc[len(df)] = ['Run 2', mean_rt_run2, accuracy_run2, acc_cond_run2['LgReward'], acc_cond_run2['LgPun'], 
-                           acc_cond_run2['Triangle'], acc_cond_run2['SmallReward'], acc_cond_run2['SmallPun']]
+        df.loc[len(df)] = ['Run 2',
+                   mean_rt_run2,
+                   accuracy_run2,
+                   acc_cond_run2.get('LgReward', np.nan),
+                   acc_cond_run2.get('LgPun', np.nan),
+                   acc_cond_run2.get('Triangle', np.nan),
+                   acc_cond_run2.get('SmallReward', np.nan),
+                   acc_cond_run2.get('SmallPun', np.nan)]
     else:
         r2_miss=r2_miss+1
     
@@ -109,10 +122,15 @@ sns.set(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
 fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, figsize=(20, 6))
 
 # Plot the first subplot
-sns.boxplot(x=df_long[df_long["Measure"].isin(['Accuracy', 'LgReward (%)','LgPun (%)','Triangle (%)',
-                                               'SmallReward (%)', 'SmallPun (%)'])]['Run'], y=df_long["Value"], ax=ax1)
-sns.stripplot(x=df_long[df_long["Measure"].isin(["Accuracy"])]['Run'], y=df_long["Value"], 
+filtered_df = df_long[df_long["Measure"].isin(['Accuracy', 'LgReward (%)','LgPun (%)','Triangle (%)',
+                                               'SmallReward (%)', 'SmallPun (%)'])].dropna(subset=["Run", "Value"])
+
+# Create the boxplot and stripplot using the filtered data
+sns.boxplot(x=filtered_df['Run'], y=filtered_df["Value"], ax=ax1)
+sns.stripplot(x=filtered_df[filtered_df["Measure"] == "Accuracy"]['Run'], y=filtered_df[filtered_df["Measure"] == "Accuracy"]["Value"],
               color="orange", jitter=0.2, size=4, ax=ax1)
+
+# Set the labels and title for the plot
 ax1.set_xlabel("Run")
 ax1.set_ylabel("Accuracy %")
 ax1.set_title(f'Accuracy for Subjects across \n Run 1 (N: {r1}) & Run 2 (N: {r2})')
@@ -132,13 +150,17 @@ df_mean_sd.columns = ['_'.join(col).strip() for col in df_mean_sd.columns.values
 
 # Set color-blind friendly palette
 colors = sns.color_palette('colorblind')
+mean_accuracy = df_long[df_long['Measure'] == 'Accuracy'].groupby('Run')['Value'].mean()
+run1_mean_acc = round(mean_accuracy[0]*100, 1)
+run2_mean_acc = round(mean_accuracy[1]*100, 1)
 # Create bar plot with error bars
 df_mean_sd['Value_mean'].unstack().plot(kind='bar', yerr=df_mean_sd['Value_std'].unstack(), ax=ax3, color=colors)
 
 # Customize plot
+ax3.axhline(.60, linestyle='solid', color='black')
 ax3.set_xlabel("Run")
 ax3.set_ylabel("Accuracy %")
-ax3.set_title(f'Accuracy for Subjects across Conditions for \n Run 1 (N: {r1}) & Run 2 (N: {r2})')
+ax3.set_title(f'Accuracy for Subjects across Conditions for \n Run 1 (N: {r1}, {run1_mean_acc}%) & Run 2 (N: {r2}; {run1_mean_acc}%) \n Black line = Target Accuracy')
 
 # Move legend to top right and make it smaller
 ax3.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0, frameon=False, fontsize=8)
