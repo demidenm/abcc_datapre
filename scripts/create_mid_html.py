@@ -184,7 +184,7 @@ text1=f"Summary of Subjects for Run 01 ({r1}) and Run 02 ({r2})."
 text2=f"Missing Run 01: {r1_miss} & Run 02: {r2_miss}"
 html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:26px;font-weight:bold;">{0}</h2>'.format(text1)
 html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:20px;">{0}</h2>'.format(text2)
-html_output += '<div style="text-align:center;"><img src="{0}" width="80%"/></div>'.format(os.path.join(out_dir, avg_fig_name))
+html_output += '<div style="text-align:center;"><img src="./{0}" width="80%"/></div>'.format(avg_fig_name)
 # description 
 html_output += '<div style="height: 20px;"></div>'
 html_output += '<p style="font-family:Times New Roman;font-size:16px;">This report is a summary of the e-prime behavioral data for the Monetary Incentive Delay (MID) task from the ABCD study.</p>'

@@ -1,5 +1,6 @@
 import argparse
 import json
+from scipy.stats import norm
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -47,9 +48,9 @@ task = args.task
 # test sub,ses,task 
 #in_dir = '/Users/michaeldemidenko/Downloads'
 #out_dir = '/Users/michaeldemidenko/Downloads'
-#sub = '#'
-#ses = '#'
-#task= 'SST'
+#sub = 'NDARINVZZNX6W2P'
+#ses = 'baselineYear1Arm1'
+#task= 'nback'
 
 # fine all files
 files = glob(f"{in_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0*_events.tsv", recursive=True)
@@ -275,6 +276,35 @@ elif task == "SST":
     lab_stopsig_accuacy = 'StopSignal.ACC'
     lab_ssd_duration = 'SSDDur'
     
+    # function for SST
+    # formula provided by Jaime Rios: integration method w/ replacement of go omissions 
+    def compute_ssrt(df, max_go_rt = 2000):
+        # pull all go trials
+        go_trials = df[df[lab_trial_type].isin(['CorrectGo', 'IncorrectGo'])]
+        # pull all stop trials
+        stop_trials = df[df[lab_trial_type].isin(['CorrectStop', 'IncorrectStop'])]
+        
+        # omission replacement
+        go_replacement_df = go_trials.where(go_trials[lab_go_rt] != 0, max_go_rt)
+        sorted_go = go_replacement_df[lab_go_rt].sort_values(ascending = True, ignore_index=True)
+        stop_failure = stop_trials.loc[stop_trials[lab_stopsig_rt] != 0]
+        
+        p_respond = len(stop_failure)/len(stop_trials)
+        avg_SSD = stop_trials.SSDDur.mean()
+        
+        nth_index = int(np.rint(p_respond*len(sorted_go))) - 1
+        
+        if nth_index < 0:
+            nth_RT = sorted_go[0]
+        elif nth_index >= len(sorted_go):
+            nth_RT = sorted_go[-1]
+        else:
+            nth_RT = sorted_go[nth_index]
+        
+        ssrt = nth_RT - avg_SSD
+        
+        return ssrt
+
     # create empty variables to save values to
     sst_descr = {}
     sst_fig_combined, axes = plt.subplots(nrows=2, ncols=5, figsize=(24, 12))
@@ -305,6 +335,9 @@ elif task == "SST":
         
         ssd_dict = {'min': min_value, 'max': max_value, 'mean': mean_value}
         
+        # calculate ssrt
+        ssrt_est = compute_ssrt(df)
+        
         
         # Create a dictionary to store the calculated values for this run
         data = {
@@ -314,6 +347,7 @@ elif task == "SST":
             'Stop Signal Accuracy': stopsig_acc,
             'Stop Signal MRT': stopsig_mrt,
             'Stop Signal Delay MRT': ssd_mrt,
+            'Stop Signal Reaction Time': ssrt_est,
             'Stop Signal Delay Durations': ssd_dict
         }
     
@@ -328,7 +362,7 @@ elif task == "SST":
         bar_trialtypes = axes[i, 0].bar(x_axis, y_axis, align='center')
         axes[i, 0].set_ylim([0, 150])
         axes[i, 0].set_ylabel('Count (N)')
-        axes[i, 0].set_xlabel('Trial Type')
+        axes[i, 0].set_xlabel('')
         axes[i, 0].set_title(f'Run 0{i+1} \n Count by Trial Type')
         axes[i, 0].tick_params(axis='x', rotation=45, labelsize=10)
         
@@ -350,9 +384,10 @@ elif task == "SST":
             box.set(edgecolor='#1f77b4', linewidth=1.5)
         
         axes[i, 1].set_ylim([0, 1250])
-        axes[i, 1].set_title(f'Run 0{i+1} \n RTs Across Trial Types \n Go (n:{go_n}), SSD (n:{ssd_n}), StopSig (n:{stop_n})')
-        axes[i, 1].set_xlabel('Condition Type')
-        axes[i, 1].set_xticklabels(['Go RT', 'Stop Sig Delay RT', 'Stop Signal RT'])
+        axes[i, 1].axhline(y=ssrt_est, color='red', linestyle='--', label='SSRT')
+        axes[i, 1].set_title(f'Run 0{i+1} \n RTs Across Trial Types \n Go (n:{go_n}), SSD (n:{ssd_n}), StopSig (n:{stop_n}), SSRT: red')
+        axes[i, 1].set_xlabel('')
+        axes[i, 1].set_xticklabels(['Go RT', 'Stop Sig Delay RT', 'Stop Signal Fail RT'])
         axes[i, 1].set_ylabel('RT (ms)')
         axes[i, 1].tick_params(axis='x', rotation=30, labelsize=10)
         
@@ -362,9 +397,9 @@ elif task == "SST":
         axes[i, 2].set_title(f'Run 0{i+1} \n RTs Across Trials \n Go (n:{go_n}), SSD (n:{ssd_n}), StopSig (n:{stop_n})')
 
         # plot the data for each variable as a line plot
-        axes[i, 2].plot(go_rt.index, go_rt.values, label='Go.RT')
-        axes[i, 2].plot(ssd_rt.index, ssd_rt.values, label='SSD.RT')
-        axes[i, 2].plot(stop_rt.index, stop_rt.values, label='StopSignal.RT')
+        axes[i, 2].plot(go_rt.index, go_rt.values, label='Go RT')
+        axes[i, 2].plot(ssd_rt.index, ssd_rt.values, label='SSD RT')
+        axes[i, 2].plot(stop_rt.index, stop_rt.values, label='Stop Signal Fail RT')
         axes[i, 2].legend(loc='upper left', fontsize='small')
         
         # Plot3: RT distributions across Go/Stop trials
@@ -375,14 +410,6 @@ elif task == "SST":
         ssd_data = df.loc[df['Go_or_stop'] == 'StopTrial', 'SSDDur']
         stop_signal_data = df.loc[df['Go_or_stop'] == 'StopTrial', 'StopSignal.Duration']
         
-        # create a histogram for Go.Duration
-        #n1, bins1, patches1 = axes[i,3].hist(x=go_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='Go.Duration')
-        #axes[i, 3].bar(bins1[:-1], n1, width=10, align='edge', color='#1f77b4')
-        #axes[i, 3].set_xlabel('Go Duration \n If block start at 1 in sec')
-        #axes[i, 3].set_ylabel('Frequency')
-        #axes[i, 3].set_ylim([0,160])
-        #axes[i, 3].set_title(f'Run 0{i+1} \n Go Trial Durations \n (Go n:{go_data.count()})')
-        
         # create a histogram for SSDDur
         n2, bins2, patches2 = axes[i,3].hist(x=ssd_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='SSDDur')
         axes[i, 3].bar(bins2[:-1], n2, width=10, align='edge', color='#1f77b4')
@@ -392,12 +419,14 @@ elif task == "SST":
         axes[i, 3].set_title(f'Run 0{i+1} \n Stop Signal Delay Durations \n (SSD n:{ssd_data.count()})')
         
         # create a histogram for StopSignal.Duration
-        n3, bins3, patches3 = axes[i,4].hist(x=stop_signal_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='StopSignal.Duration')
-        axes[i, 4].bar(bins3[:-1], n3, width=10, align='edge', color='#1f77b4')
-        axes[i, 4].set_xlabel('Stop Signal Duration (ms)')
-        axes[i, 4].set_ylabel('Frequency')
-        axes[i, 4].set_ylim([0,50])
-        axes[i, 4].set_title(f'Run 0{i+1} \n Stop Signal Durations \n (StopSig n:{stop_signal_data.count()})')
+        x_labels = ['Go Accuracy', 'Stop Signal Accuracy']
+        means = [go_acc, stopsig_acc]
+
+        axes[i, 4].bar(x_labels, means, color='#1f77b4')
+        axes[i, 4].set_xlabel('Condition')
+        axes[i, 4].set_ylabel('% Accuracy')
+        axes[i, 4].set_ylim([0, 1])  # Assuming accuracy is a value between 0 and 1
+        axes[i, 4].set_title(f'Run 0{i+1} \n Mean Accuracies \n (Go: {go_acc:.2f}, Stop: {stopsig_acc:.2f})')
 
         
         # making tight layout and then save out png
@@ -407,4 +436,189 @@ elif task == "SST":
         # Writeout the .json file for each mid description
         with open(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_beh-descr.json", 'w') as f:
             json.dump(sst_descr, f, indent=4)        
+        
+elif task == "nback":
+    # column names, specify
+    lab_trial_n = 'SubTrial'
+    lab_block = 'BlockType'
+    lab_stimulus = 'StimType'
+    lab_target = 'TargetType'
+    lab_stim_acc = 'Stim.ACC'
+    lab_stim_rt = 'Stim.RT'
+    
+    # define function for d-prime
+    def calc_d_prime(df, block_col, acc_col):
+        """
+        n-back d-prime (D') for the specified conditions in a dataframe = df.
+    
+                        
+        df (pandas.DataFrame): pd.DF containing the data.
+        block_type_column (str): The column name for the block type e.g., 'BlockType'.
+        accuracy_column (str): The column name for the accuracy (e.g. Stim.ACC).
+        conditions (list): The list of conditions to calculate d-prime for (e.g. [0-Back, 2-Back]).
+    
+        Returns: A dictionary containing the calculated d-prime values for each condition.
+        
+        """
+        
+        block_type = df[block_col]
+        accuracy = df[acc_col]
+        
+        # Step 2: Filter the data for 2-back and 0-back conditions
+        is_2back = block_type == '2-Back'
+        is_0back = block_type == '0-Back'
+        accuracy_2back = accuracy[is_2back]
+        accuracy_0back = accuracy[is_0back]
+    
+    
+        hit_2back = accuracy_2back.mean()
+        miss_2back = 1 - hit_2back
+        hit_0back = accuracy_0back.mean()
+        miss_0back = 1 - hit_0back
+        
+        hit_2back_z = norm.ppf(hit_2back)
+        miss_2back_z = norm.ppf(miss_2back)
+        hit_0back_z = norm.ppf(hit_0back)
+        miss_0back_z = norm.ppf(miss_0back)
+        
+        dprime_2back = hit_2back_z - miss_2back_z
+        dprime_0back = hit_0back_z - miss_0back_z
+        
+        dprime_dict = {
+        '2back': dprime_2back,
+        '0back': dprime_0back
+        }
+        
+        return dprime_dict
+    
+    
+    # create empty variables to save values to
+    nback_descr = {}
+    nback_fig_combined, axes = plt.subplots(nrows=2, ncols=4, figsize=(33, 20))
+    
+    
+    for i, file_name in enumerate(files):
+        # Load the file into a DataFrame
+        df = pd.read_csv(file_name, sep ='\t')
+        
+        # counts of types
+        blocktype_count = df.groupby(lab_block).size().to_dict()
+        stimtype_count = df.groupby(lab_stimulus).size().to_dict()
+        targettype_count = df.groupby(lab_target).size().to_dict()
+        
+        # acc by types
+        blocktype_acc = df.groupby(lab_block)[lab_stim_acc].mean().to_dict()
+        stimtype_acc = df.groupby(lab_stimulus)[lab_stim_acc].mean().to_dict()
+        targettype_acc = df.groupby(lab_target)[lab_stim_acc].mean().to_dict()
+        avg_acc = df[lab_stim_acc].mean().round(2)
+        
+        # RT by types
+        blocktype_rt = df.groupby(lab_block)[lab_stim_rt].mean().to_dict()
+        stimtype_rt = df.groupby(lab_stimulus)[lab_stim_rt].mean().to_dict()
+        targettype_rt = df.groupby(lab_target)[lab_stim_rt].mean().to_dict()
+        avg_rt = df[lab_stim_rt].mean().round(2)
+        
+        #d-prime calc
+        dprime = calc_d_prime(df = df, block_col=lab_block, acc_col=lab_stim_acc)
+
+        # Create a dictionary to store the calculated values for this run
+        data = {
+            'Block N': blocktype_count, 
+            'Block Accuracy': blocktype_acc,
+            'Block Mean RT': blocktype_rt,
+            'Stimulus N': stimtype_count, 
+            'Stimulus Accuracy': stimtype_acc,
+            'Stimulus Mean RT': stimtype_rt,
+            'Target N': targettype_count, 
+            'Target Accuracy': targettype_acc,
+            'Target Mean RT': targettype_rt,
+            'Overall Accuracy': avg_acc,
+            'Overall Mean RT': avg_rt,
+            'D-prime':dprime
+        }
+    
+        # Add the data for this run to the dictionary of all data
+        nback_descr[f'Run {i+1}'] = data
+        
+        
+        # Plot data for nback
+        # plot counts across types
+        #x_axis_counts = list(blocktype_count.keys()) + list(stimtype_count.keys()) + list(targettype_count.keys())
+        #y_axis_counts = list(blocktype_count.values()) + list(stimtype_count.values()) + list(targettype_count.values())
+        
+        # Plot the bar chart on the appropriate subplot
+        #bar_counttypes = axes[i, 0].bar(x_axis_counts, y_axis_counts, align='center')
+        
+        # Customize the subplot
+        #axes[i, 0].set_ylim([0, max(y_axis_counts) + 5])
+        #axes[i, 0].set_ylabel('Count (N)')
+        #axes[i, 0].set_xlabel('')
+        #axes[i, 0].set_title(f'Run 0{i+1} \n Counts for Stimulus Types')
+        #axes[i, 0].tick_params(axis='x', rotation=45, labelsize=10)
+
+        # plot accuracy across types
+        x_axis_acc = list(blocktype_acc.keys()) + list(stimtype_acc.keys()) + list(targettype_acc.keys())
+        y_axis_acc = list(blocktype_acc.values()) + list(stimtype_acc.values()) + list(targettype_acc.values())
+        
+        # Plot the bar chart on the appropriate subplot
+        avg_acc_whole = avg_acc*100
+        bar_acctypes = axes[i, 0].bar(x_axis_acc, y_axis_acc, align='center')
+        
+        # Customize the subplot
+        axes[i, 0].set_ylim([0, 1])
+        axes[i, 0].set_ylabel('Accuracy (%)')
+        axes[i, 0].set_xlabel('')
+        axes[i, 0].axhline(y=avg_acc, color='red', linestyle='--')
+        axes[i, 0].set_title(f'Run 0{i+1} \n Accuracy across stimulus types \n Red: Avg Accuracy ({avg_acc_whole}%)')
+        axes[i, 0].tick_params(axis='x', rotation=45, labelsize=10)
+        
+        # plot mRT across types
+        x_axis_rt = list(blocktype_rt.keys()) + list(stimtype_rt.keys()) + list(targettype_rt.keys())
+        y_axis_rt = list(blocktype_rt.values()) + list(stimtype_rt.values()) + list(targettype_rt.values())
+        
+        # Plot the bar chart on the appropriate subplot
+        bar_rttypes = axes[i, 1].bar(x_axis_rt, y_axis_rt, align='center')
+        
+        # Customize the subplot
+        axes[i, 1].set_ylim([0, 2000])
+        axes[i, 1].set_ylabel('Mean RT (ms)')
+        axes[i, 1].set_xlabel('')
+        axes[i, 1].axhline(y=avg_rt, color='red', linestyle='--')
+        axes[i, 1].set_title(f'Run 0{i+1} \n Mean RT Across Stimulus Types \n Red: mean RT ({avg_rt}ms)')
+        axes[i, 1].tick_params(axis='x', rotation=45, labelsize=10)
+        
+        # plot trialwise data
+        # Group the data by condition and trial and calculate the mean RT
+        rt_by_condition = df.groupby([lab_block, lab_trial_n])[lab_stim_rt].mean().reset_index()
+        
+        # Pivot the data to have condition types as columns and trials as rows
+        rt_pivot = rt_by_condition.pivot(index=lab_trial_n, columns=lab_block, values=lab_stim_rt)
+        
+        by_type_rt_plt = rt_pivot.plot(ax=axes[i,2], linestyle='-')
+        axes[i, 2].set_ylabel('RT (ms)')
+        axes[i, 2].set_xlabel('Trial')
+        axes[i, 2].set_title(f'Run 0{i+1} \n RT Across Trials for Block Type')
+        axes[i, 2].tick_params(axis='x', rotation=45, labelsize=10)
+        axes[i, 2].legend(loc='upper right', facecolor='white', edgecolor='black')
+        
+        # plot dprime
+        dprime_x_axis = list(dprime.keys())
+        dprime_y_axis = list(dprime.values())
+        
+        axes[i, 3].bar(dprime_x_axis, dprime_y_axis, align='center')
+
+        # Customize the subplot
+        axes[i, 3].set_ylabel('D`')
+        axes[i, 3].set_ylim([-2, 8])
+        axes[i, 3].set_xlabel('Condition')
+        axes[i, 3].set_title(f'Run 0{i+1} \n D` for Block Type')
+        axes[i, 3].tick_params(axis='x', rotation=45, labelsize=10)
+        
+        # making tight layout and then save out png
+        nback_fig_combined.tight_layout()
+        nback_fig_combined.savefig(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_plot-combined.png")
+        
+        # Writeout the .json file for each mid description
+        with open(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_beh-descr.json", 'w') as f:
+            json.dump(nback_descr, f, indent=4)  
         

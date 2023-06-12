@@ -6,3 +6,6 @@
 .idea/misc.xml
 .idea/modules.xml
 .idea/vcs.xml
+scripts/create_mid_html.py
+scripts/create_sst_html.py
+scripts/create_mid_html.py

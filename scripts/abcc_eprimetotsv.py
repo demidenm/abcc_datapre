@@ -20,33 +20,6 @@ are left in miliseconds and note converted, as in other onset/durations to secon
 Most recent edit: May 6, 2023.
 """
 
-# Create ArgumentParser object
-parser = argparse.ArgumentParser(description="This script runs and converts the .txt events data to events.tsv for each MID run.")
-
-# Add required positional arguments
-parser.add_argument("-i", "--in_dir", type=str, required=True,
-                    help="Input directory path where the events file is within */func/")
-parser.add_argument("-o", "--out_dir", type=str, required=True,
-                    help="Output directory path where the results should go")
-parser.add_argument("-s", "--sub", type=str, required=True,
-                    help="subject argument (e.g. NVDAFL737P) without sub prefix")
-parser.add_argument("-e", "--ses", type=str, required=True,
-                    help="session argument (e.g. baselinearm1) without ses prefix")
-parser.add_argument("-r", "--run", type=str, required=True,
-                    help="run argument (e.g. 01, 02) with run prefix")
-parser.add_argument("-t", "--task", type=str, required=True,
-                    help="task argument (e.g. MID, SST, nback)")
-# Parse command-line arguments
-args = parser.parse_args()
-
-# Assign values to variables
-in_dir = args.in_dir
-out_dir = args.out_dir
-sub = args.sub
-ses = args.ses
-run = args.run
-task = args.task
-
 
 # Using Taylor Taslo's convert txt to df code from github: tsalo/convert-eprime/ as could not use from package. 
 # Credit for lines #35 to #99 should be all given to Taylor.
@@ -128,14 +101,41 @@ def convert_to_numeric(df):
                 pass
     return df
 
+# Create ArgumentParser object
+parser = argparse.ArgumentParser(description="This script runs and converts the .txt events data to events.tsv for each MID run.")
+
+# Add required positional arguments
+parser.add_argument("-i", "--in_dir", type=str, required=True,
+                    help="Input directory path where the events file is within */func/")
+parser.add_argument("-o", "--out_dir", type=str, required=True,
+                    help="Output directory path where the results should go")
+parser.add_argument("-s", "--sub", type=str, required=True,
+                    help="subject argument (e.g. NVDAFL737P) without sub prefix")
+parser.add_argument("-e", "--ses", type=str, required=True,
+                    help="session argument (e.g. baselinearm1) without ses prefix")
+parser.add_argument("-r", "--run", type=str, required=True,
+                    help="run argument (e.g. 01, 02) with run prefix")
+parser.add_argument("-t", "--task", type=str, required=True,
+                    help="task argument (e.g. MID, SST, nback)")
+# Parse command-line arguments
+args = parser.parse_args()
+
+# Assign values to variables
+in_dir = args.in_dir
+out_dir = args.out_dir
+sub = args.sub
+ses = args.ses
+run = args.run
+task = args.task
+
 
 # testing
-#in_dir = '/Users/michaeldemidenko/Downloads'
-#out_dir = '/Users/michaeldemidenko/Downloads'
-#sub = '##'
-#ses = '##'
-#run = '01'
-#task = 'MID'
+in_dir = '/Users/michaeldemidenko/Downloads'
+out_dir = '/Users/michaeldemidenko/Downloads'
+sub = 'NDARINVZZNX6W2P'
+ses = 'baselineYear1Arm1'
+run = '01'
+task = 'nback'
 
 
 # Setting up the file path
