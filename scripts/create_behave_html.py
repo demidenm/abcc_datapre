@@ -30,10 +30,10 @@ ses = args.ses
 task = args.task
 
 # Define input directory
-in_dir = '/Users/michaeldemidenko/Downloads'
-out_dir = '/Users/michaeldemidenko/Downloads'
-ses = "baselineYear1Arm1"
-task = 'nback'
+#in_dir = '/Users/michaeldemidenko/Downloads'
+#out_dir = '/Users/michaeldemidenko/Downloads'
+#ses = "baselineYear1Arm1"
+#task = 'nback'
 
 
 # Get a list of all files in the directory
@@ -312,6 +312,7 @@ elif task == "SST":
     # Create the boxplot and stripplot using the filtered data
     sns.boxplot(x="Run", y="Value", hue="Measure", data=filtered_acc_df, ax=ax1)
     # Set the labels and title for the plot
+    ax1.set_ylim([0, 1.2])
     ax1.set_xlabel("Run")
     ax1.set_ylabel("Accuracy %")
     ax1.set_title(f'Accuracy for Subjects across \n Run 1 (N: {r1}) & Run 2 (N: {r2})')
@@ -327,6 +328,7 @@ elif task == "SST":
     # Create the boxplot and stripplot using the filtered data
     sns.boxplot(x="Run", y="Value", hue="Measure", data=filtered_rt_df, ax=ax2)
     # Set the labels and title for the plot
+    ax2.set_ylim([-500, 1000])
     ax2.set_xlabel("Run")
     ax2.set_ylabel("Mean RT (ms)")
     ax2.set_title(f'Mean RTs for Subjects across \n Run 1 (N: {r1}) & Run 2 (N: {r2})')
@@ -342,6 +344,7 @@ elif task == "SST":
     # Create the boxplot and stripplot using the filtered data
     sns.boxplot(x="Run", y="Value", hue="Measure", data=filtered_ssd_df, ax=ax3)
     # Set the labels and title for the plot
+    ax3.set_ylim([-250, 1000])
     ax3.set_xlabel("Run")
     ax3.set_ylabel("SSD Delay (ms)")
     ax3.set_title(f'SSD Delay (Min/Max) for Subjects across \n Run 1 (N: {r1}) & Run 2 (N: {r2})')
@@ -518,7 +521,7 @@ elif task == "nback":
     # Set style and background color
     sns.set(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
     # Create a figure with two subplots
-    fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(ncols=5, figsize=(20, 10))
+    fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(ncols=5, figsize=(30, 15)) 
     
     # Plot 1
     # filter data
@@ -528,6 +531,7 @@ elif task == "nback":
     # Create the boxplot and stripplot using the filtered data
     sns.boxplot(x="Run", y="Value", hue="Measure", data=filtered_nback_acc_df, ax=ax1)
     # Set the labels and title for the plot
+    ax1.set_ylim([0, 1.2])
     ax1.set_xlabel("Run")
     ax1.set_ylabel("Accuracy %")
     ax1.set_title(f'Block Type Accuracy for Subjects across \n Run 1 (N: {r1}) & Run 2 (N: {r2})')
@@ -545,6 +549,7 @@ elif task == "nback":
     # Create the boxplot and stripplot using the filtered data
     sns.boxplot(x="Run", y="Value", hue="Measure", data=filtered_stim_acc_df, ax=ax2)
     # Set the labels and title for the plot
+    ax2.set_ylim([0, 1.2])
     ax2.set_xlabel("Run")
     ax2.set_ylabel("Accuracy %")
     ax2.set_title(f'Stimulus Type Accuracy for Subjects across \n Run 1 (N: {r1}) & Run 2 (N: {r2})')
@@ -561,6 +566,7 @@ elif task == "nback":
     # Create the boxplot and stripplot using the filtered data
     sns.boxplot(x="Run", y="Value", hue="Measure", data=filtered_nback_mrt_df, ax=ax3)
     # Set the labels and title for the plot
+    ax3.set_ylim([0, 2000])
     ax3.set_xlabel("Run")
     ax3.set_ylabel("mean RT (ms)")
     ax3.set_title(f'Block Mean RT for Subjects across \n Run 1 (N: {r1}) & Run 2 (N: {r2})')
@@ -578,6 +584,7 @@ elif task == "nback":
     # Create the boxplot and stripplot using the filtered data
     sns.boxplot(x="Run", y="Value", hue="Measure", data=filtered_stim_mrt_df, ax=ax4)
     # Set the labels and title for the plot
+    ax4.set_ylim([0, 2000])
     ax4.set_xlabel("Run")
     ax4.set_ylabel("Accuracy %")
     ax4.set_title(f'Stimulus Type Mean RT for Subjects across \n Run 1 (N: {r1}) & Run 2 (N: {r2})')
@@ -593,6 +600,7 @@ elif task == "nback":
     # Create the boxplot and stripplot using the filtered data
     sns.boxplot(x="Run", y="Value", hue="Measure", data=filtered_dprime_df, ax=ax5)
     # Set the labels and title for the plot
+    ax5.set_ylim([-10, 10])
     ax5.set_xlabel("Run")
     ax5.set_ylabel("Accuracy %")
     ax5.set_title(f'D-prime for Subjects across \n Run 1 (N: {r1}) & Run 2 (N: {r2})')

@@ -130,12 +130,12 @@ task = args.task
 
 
 # testing
-in_dir = '/Users/michaeldemidenko/Downloads'
-out_dir = '/Users/michaeldemidenko/Downloads'
-sub = 'NDARINVZZNX6W2P'
-ses = 'baselineYear1Arm1'
-run = '01'
-task = 'nback'
+#in_dir = '/Users/michaeldemidenko/Downloads'
+#out_dir = '/Users/michaeldemidenko/Downloads'
+#sub = '##'
+#ses = 'baselineYear1Arm1'
+#run = '01'
+#task = 'nback'
 
 
 # Setting up the file path

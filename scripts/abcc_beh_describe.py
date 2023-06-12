@@ -48,7 +48,7 @@ task = args.task
 # test sub,ses,task 
 #in_dir = '/Users/michaeldemidenko/Downloads'
 #out_dir = '/Users/michaeldemidenko/Downloads'
-#sub = 'NDARINVZZNX6W2P'
+#sub = '##'
 #ses = 'baselineYear1Arm1'
 #task= 'nback'
 
@@ -510,13 +510,13 @@ elif task == "nback":
         blocktype_acc = df.groupby(lab_block)[lab_stim_acc].mean().to_dict()
         stimtype_acc = df.groupby(lab_stimulus)[lab_stim_acc].mean().to_dict()
         targettype_acc = df.groupby(lab_target)[lab_stim_acc].mean().to_dict()
-        avg_acc = df[lab_stim_acc].mean().round(2)
+        avg_acc = round(float(df[lab_stim_acc].mean()), 2)
         
         # RT by types
         blocktype_rt = df.groupby(lab_block)[lab_stim_rt].mean().to_dict()
         stimtype_rt = df.groupby(lab_stimulus)[lab_stim_rt].mean().to_dict()
         targettype_rt = df.groupby(lab_target)[lab_stim_rt].mean().to_dict()
-        avg_rt = df[lab_stim_rt].mean().round(2)
+        avg_rt = round(float(df[lab_stim_rt].mean()), 2)
         
         #d-prime calc
         dprime = calc_d_prime(df = df, block_col=lab_block, acc_col=lab_stim_acc)
@@ -565,7 +565,7 @@ elif task == "nback":
         bar_acctypes = axes[i, 0].bar(x_axis_acc, y_axis_acc, align='center')
         
         # Customize the subplot
-        axes[i, 0].set_ylim([0, 1])
+        axes[i, 0].set_ylim([0, 1.1])
         axes[i, 0].set_ylabel('Accuracy (%)')
         axes[i, 0].set_xlabel('')
         axes[i, 0].axhline(y=avg_acc, color='red', linestyle='--')
