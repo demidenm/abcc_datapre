@@ -4,7 +4,7 @@ import pandas as pd
 
 # Set the directory where the files are located
 #in_dir = '/Users/michaeldemidenko/Downloads'
-out_dir = '/Users/michaeldemidenko/Downloads'
+#out_dir = '/Users/michaeldemidenko/Downloads'
 
 # Create ArgumentParser object
 parser = argparse.ArgumentParser(description="Checks initial onset values and DiffTriggerTimes in events.tsvs")

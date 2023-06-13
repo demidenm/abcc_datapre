@@ -1,0 +1,73 @@
+<p style="font-family:  Helvetica; font-size: 16px;">
+  This report is a summary of the e-prime behavioral data for the Emotional Nback (NBack) task from the ABCD study.
+  <br>
+  <br>
+  <strong><u>Task Description:</u></strong>
+  <br>
+  To paraphrase from <a href="https://www.nature.com/articles/s41593-021-00867-9">Chaarani et al. (2021)</a> and
+  <a href="https://www.doi.org/10.1016/j.dcn.2018.03.001">Casey et al. (2018)</a>, the Emotional N-back (or EN-back task)
+  engages memory and emotion regulation processes. The task contains high (2back) and low (0back) working memory loads.
+  It uses two stimuli categories: faces and places. Within the faces category, there are three types: positive, neutral, or
+  negative faces. In this block design, the contrast that is considered to have the highest spatial reproducibility is in
+  the faces versus places contrasts. The behavioral variable of interest is 'D-prime' (D').
+  <br>
+  During the EN-back task, participant saw a series of images (see Figure 7 in Casey et al) across two condition: 2-back or 0-back. 
+  During the stimuli presentation, participants indcated whether a stimulus was or was not a match. Participants completed two runs of the EN-back task.
+  Each run consistent of 80 trials (160 total), 40 0-back and 40 2-back occurences. During each runs of the 80 trials:
+  there were 20 positive face, 20 neutral face, 20 negative face, 20 places stimi types or 20 lure, 44 nonlure, 16 target.
+  <br>
+  <br>
+  <strong><u>D-prime: </u></strong>
+  <br>
+  D-prime is calculated for the 0back and 2back conditions. 
+  The calculation: For each condition, the percentage accuracy (or 'hit') is calculated as the mean of the Stim.ACC variable from the E-prime
+  files. The Fail (or 'miss') is calculated as 1 - hit accuracy %. The two values are z-transformed. D-prime is then derived as:
+  0back hit - 0back miss and 2back hit - 2back miss.
+  <br>
+  <br>
+  <strong><u>Task Summaries: </u></strong>
+  <br>
+  The group- and individual-level summaries are calculated based on the *_events.tsv behavioral data. This data is curated using
+  a script that uses the EventsRelatedInformation.[txt/csv] (EPI) files and pulls out the relevant columns. 
+  <br>
+  <em>Group Level: </em>
+  The group level summaries are based on the extracted values from the curated individual JSON files. The main figure reports the 
+  information for the available runs: run 01 and run 02. There are five figures:
+  
+  <ol>
+    <li>Figure 1: Bloxplot of accuracy for each block type (0-back and 2-back) across all of the subjects for Run 01 and Run 02 </li>
+    <li>Figure 2: Bloxplot of accuracy for each Stimulus type (pos,neg,neut face, and places) across all of the subjects for Run 01 and Run 02 </li>
+    <li>Figure 3: Bloxplot of mean RT for each block type (0-back and 2-back) across all of the subjects for Run 01 and Run 02 </li>
+    <li>Figure 4: Bloxplot of mean RT for each Stimulus type (pos,neg,neut face, and places) across all of the subjects for Run 01 and Run 02 </li>
+    <li>Figure 5: Bloxplot of estimated D-prime values for each block type, 0-back and 2-back.  </li>
+  </ol>
+  
+  These values include all subjects that did not fail EPI to *_events.tsv conversion. As a result, it is expected that subjects that failed the DAIRC
+  behavioral QC are included here. Hence, it is still important to exclude subjects based on the e-prime and fMRI QC flags that are provided with the
+  data releases.
+  <br>
+  <em>Individual Level: </em>
+  Below are the plots for each individual subject. The plots are for run 01 and run 02. When a subject does not have data for a run, this
+  will result in one empty row of figures (when curative plots, the script iterates over indices of N files that are 1+). For each run, there are five 
+figures:
+  
+  <ol>
+    <li>Figure 1: Bar plot of accuracy (percent) across ALL stimulus types, e.g., blocks, stimulus and targets. The dashed red line is the average accuracy 
+across all types. </li>
+    <li>Figure 2: Bar plot of mean RT (ms) across ALL stimulus types, e.g., blocks, stimulus and targets. The dashed red line is the average ms across all 
+types. </li>
+    <li>Figure 3: Line graph that plots the trial-wise response times (ms) for 0-back and 2-back conditions </li>
+    <li>Figure 4: Bar plot of the D' values for each of the two conditions, 0-back and 2-back </li>
+  </ol>
+  
+  The is an associated sidecar with each subjects' individual summaries: By type accuracy and mean response time for Block, 
+  Stimulus and Target. As we as overall accuracy & mean RT, and d-prime for 0-back and 2-back.
+  
+  <br>
+  <br>
+  <strong><u>Open Code: </u></strong>
+  <br>
+  The data used to curate this html report and steops leading up to this, such as eprime data into `_events.tsv` files, generate behavioral description
+  JSONs/PNGs, they are available at the GitHub repository:
+  <a href="https://github.com/demidenm/abcc_datapre">Git: demidenm/abcc_datapre</a>.
+</p>

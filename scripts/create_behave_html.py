@@ -35,7 +35,15 @@ task = args.task
 #ses = "baselineYear1Arm1"
 #task = 'nback'
 
+# get file that describes contents of report
+#with open(f'{in_dir}/describe_report_{task}.txt', 'r') as file:
+#    task_describe = file.read()
 
+# get file that describes contents of report
+with open(f'./describe_report_{task}.txt', 'r') as file:
+    task_describe = file.read()
+    
+    
 # Get a list of all files in the directory
 files = os.listdir(in_dir)
 files = [f for f in files if not f.startswith('._')]
@@ -176,25 +184,19 @@ if task == "MID":
 
 
     # Create the beginning of the HTML output
-    html_output = '<html><head><title>Data Summary</title><style>td, th {font-family: Times New Roman;}</style></head><body>'
-    html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:50px;font-weight:bold;color:orange;">ABCD Study® \n MID Behavior</h2>'
-    html_output += '<h3 style="text-align:center;font-family:Times New Roman;font-size:40px;font-weight:bold;color:orange;">{0}</h3>'.format(ses)
+    html_output = '<html><head><title>Data Summary</title><style>td, th {font-family: Helvetica;}</style></head><body>'
+    html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:50px;font-weight:bold;color:orange;">ABCD Study® \n MID Behavior</h2>'
+    html_output += '<h3 style="text-align:center;font-family:Helvetica;font-size:40px;font-weight:bold;color:orange;">{0}</h3>'.format(ses)
     # adding group average plot
     avg_fig_name=f"subs-{n}_ses-{ses}_task-{task}_plot-averages.png"
     text1=f"Summary of Subjects for Run 01 ({r1}) and Run 02 ({r2})."
     text2=f"Missing Run 01: {r1_miss} & Run 02: {r2_miss}"
-    html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:26px;font-weight:bold;">{0}</h2>'.format(text1)
-    html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:20px;">{0}</h2>'.format(text2)
+    html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:26px;font-weight:bold;">{0}</h2>'.format(text1)
+    html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:20px;">{0}</h2>'.format(text2)
     html_output += '<div style="text-align:center;"><img src="./{0}" width="80%"/></div>'.format(avg_fig_name)
     # description 
     html_output += '<div style="height: 20px;"></div>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">This report is a summary of the e-prime behavioral data for the Monetary Incentive Delay (MID) task from the ABCD study.</p>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">The Monetary Incentive Delay task is designed to measure cognitive and motivational processes related to reward anticipation and receipt.</p>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">The group-level summary includes extracted data from curated JSON files, displaying the accuracy and mean reaction time (RT) across runs, as well as the accuracy by cue conditions for each run.</p>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">Below the group-level summaries, you will find subject-specific run summaries. These include accuracies by condition, trial-wise accuracy, mean RT per hit/miss condition (when available), trial-wise RT, the number of feedback conditions, and the reward category alternation from the current trial (t) to the next trial (t+1).</p>'
-    html_output += '<div style="height: 20px;"></div>'
-    html_output += '<p style="font-family:Times New Roman;font-size:10px;">The data curation scripts were utilized to transform the eprime data into `_events.tsv` files, generate behavioral description JSONs/PNGs, and create the HTML report. You can find the scripts and additional information at the following GitHub repository: <a href="https://github.com/demidenm/abcc_datapre">Git: demidenm/abcc_datapre</a>.</p>'
-
+    html_output += '{0}'.format(task_describe)
     html_output += '<hr/>' 
     html_output += '<hr/>'
     html_output += '<hr/>'
@@ -207,7 +209,7 @@ if task == "MID":
         ses = f.split('ses-')[1].split('_')[0]
 
         # adding sub + ses to labels
-        html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:30px;font-weight:bold;">Subject: {0}</h2><h3 style="text-align:center;font-family:Times New Roman;font-size:16px;">Session: {1}</h3>'.format(sub.upper(), ses)
+        html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:30px;font-weight:bold;">Subject: {0}</h2><h3 style="text-align:center;font-family:Helvetica;font-size:16px;">Session: {1}</h3>'.format(sub.upper(), ses)
 
         # adding image
         html_output += '<div style="text-align:center;"><img src="../{0}_{1}/{2}" width="80%"/></div>'.format(ses,task,f)
@@ -358,25 +360,19 @@ elif task == "SST":
     
     
     # Create the beginning of the HTML output
-    html_output = '<html><head><title>Data Summary</title><style>td, th {font-family: Times New Roman;}</style></head><body>'
-    html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:50px;font-weight:bold;color:orange;">ABCD Study® \n Stop Signal Task Behavior</h2>'
-    html_output += '<h3 style="text-align:center;font-family:Times New Roman;font-size:40px;font-weight:bold;color:orange;">{0}</h3>'.format(ses)
+    html_output = '<html><head><title>Data Summary</title><style>td, th {font-family: Helvetica;}</style></head><body>'
+    html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:50px;font-weight:bold;color:orange;">ABCD Study® \n Stop Signal Task Behavior</h2>'
+    html_output += '<h3 style="text-align:center;font-family:Helvetica;font-size:40px;font-weight:bold;color:orange;">{0}</h3>'.format(ses)
     # adding group average plot
     avg_fig_name=f"subs-{n}_ses-{ses}_task-{task}_plot-averages.png"
     text1=f"Summary of Subjects for Run 01 ({r1}) and Run 02 ({r2})."
     text2=f"Missing Run 01: {r1_miss} & Run 02: {r2_miss}"
-    html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:26px;font-weight:bold;">{0}</h2>'.format(text1)
-    html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:20px;">{0}</h2>'.format(text2)
+    html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:26px;font-weight:bold;">{0}</h2>'.format(text1)
+    html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:20px;">{0}</h2>'.format(text2)
     html_output += '<div style="text-align:center;"><img src="./{0}" width="80%"/></div>'.format(avg_fig_name)
     # description 
     html_output += '<div style="height: 20px;"></div>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">This report is a summary of the e-prime behavioral data for the Stop Signal Task (SST) task from the ABCD study.</p>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">The SST is design to measure cognitive control, specifically, inhibitory control. The variable of interest is the Stop Signal Response Time (SSRT), which is the inhibition of the motor response following a Go Signal when the Stop Signal Appears.</p>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">The group-level summary includes extracted data from curated JSON files, displaying the accuracy, mean reaction time (RT) and Stop Signal Delay Durations (SSDDur) min/max values across runs.</p>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">Below the group-level summaries, you will find subject-specific run summaries.</p>'
-    html_output += '<div style="height: 20px;"></div>'
-    html_output += '<p style="font-family:Times New Roman;font-size:10px;">The data curation scripts were utilized to transform the eprime data into `_events.tsv` files, generate behavioral description JSONs/PNGs, and create the HTML report. You can find the scripts and additional information at the following GitHub repository: <a href="https://github.com/demidenm/abcc_datapre">Git: demidenm/abcc_datapre</a>.</p>'
-    
+    html_output += '{0}'.format(task_describe)
     html_output += '<hr/>' 
     html_output += '<hr/>'
     html_output += '<hr/>'
@@ -389,7 +385,7 @@ elif task == "SST":
         ses = f.split('ses-')[1].split('_')[0]
     
         # adding sub + ses to labels
-        html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:30px;font-weight:bold;">Subject: {0}</h2><h3 style="text-align:center;font-family:Times New Roman;font-size:16px;">Session: {1}</h3>'.format(sub.upper(), ses)
+        html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:30px;font-weight:bold;">Subject: {0}</h2><h3 style="text-align:center;font-family:Helvetica;font-size:16px;">Session: {1}</h3>'.format(sub.upper(), ses)
     
         # adding image
         html_output += '<div style="text-align:center;"><img src="../{0}_{1}/{2}" width="80%"/></div>'.format(ses,task,f)
@@ -614,25 +610,19 @@ elif task == "nback":
     
     
     # Create the beginning of the HTML output
-    html_output = '<html><head><title>Data Summary</title><style>td, th {font-family: Times New Roman;}</style></head><body>'
-    html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:50px;font-weight:bold;color:orange;">ABCD Study® \n Emotional N-Back Task</h2>'
-    html_output += '<h3 style="text-align:center;font-family:Times New Roman;font-size:40px;font-weight:bold;color:orange;">{0}</h3>'.format(ses)
+    html_output = '<html><head><title>Data Summary</title><style>td, th {font-family: Helvetica;}</style></head><body>'
+    html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:50px;font-weight:bold;color:orange;">ABCD Study® \n Emotional N-Back Task</h2>'
+    html_output += '<h3 style="text-align:center;font-family:Helvetica;font-size:40px;font-weight:bold;color:orange;">{0}</h3>'.format(ses)
     # adding group average plot
     avg_fig_name=f"subs-{n}_ses-{ses}_task-{task}_plot-averages.png"
     text1=f"Summary of Subjects for Run 01 ({r1}) and Run 02 ({r2})."
     text2=f"Missing Run 01: {r1_miss} & Run 02: {r2_miss}"
-    html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:26px;font-weight:bold;">{0}</h2>'.format(text1)
-    html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:20px;">{0}</h2>'.format(text2)
+    html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:26px;font-weight:bold;">{0}</h2>'.format(text1)
+    html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:20px;">{0}</h2>'.format(text2)
     html_output += '<div style="text-align:center;"><img src="./{0}" width="80%"/></div>'.format(avg_fig_name)
     # description 
     html_output += '<div style="height: 20px;"></div>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">This report is a summary of the e-prime behavioral data for the Emotional Nback (NBack) task from the ABCD study.</p>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">The Emotional Nback is design to measure affective and working memory load. The variable of interest is the D-prime.</p>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">The group-level summary includes extracted data from curated JSON files, displaying the accuracy, mean reaction time (RT) and D-prime per run.</p>'
-    html_output += '<p style="font-family:Times New Roman;font-size:16px;">Below the group-level summaries, you will find subject-specific run summaries.</p>'
-    html_output += '<div style="height: 20px;"></div>'
-    html_output += '<p style="font-family:Times New Roman;font-size:10px;">The data curation scripts were utilized to transform the eprime data into `_events.tsv` files, generate behavioral description JSONs/PNGs, and create the HTML report. You can find the scripts and additional information at the following GitHub repository: <a href="https://github.com/demidenm/abcc_datapre">Git: demidenm/abcc_datapre</a>.</p>'
-    
+    html_output += '{0}'.format(task_describe)
     html_output += '<hr/>' 
     html_output += '<hr/>'
     html_output += '<hr/>'
@@ -645,7 +635,7 @@ elif task == "nback":
         ses = f.split('ses-')[1].split('_')[0]
     
         # adding sub + ses to labels
-        html_output += '<h2 style="text-align:center;font-family:Times New Roman;font-size:30px;font-weight:bold;">Subject: {0}</h2><h3 style="text-align:center;font-family:Times New Roman;font-size:16px;">Session: {1}</h3>'.format(sub.upper(), ses)
+        html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:30px;font-weight:bold;">Subject: {0}</h2><h3 style="text-align:center;font-family:Helvetica;font-size:16px;">Session: {1}</h3>'.format(sub.upper(), ses)
     
         # adding image
         html_output += '<div style="text-align:center;"><img src="../{0}_{1}/{2}" width="80%"/></div>'.format(ses,task,f)
