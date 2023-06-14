@@ -20,6 +20,14 @@ are left in miliseconds and note converted, as in other onset/durations to secon
 Most recent edit: May 6, 2023.
 """
 
+# testing
+#in_dir = '/Users/michaeldemidenko/Downloads'
+#out_dir = '/Users/michaeldemidenko/Downloads'
+#sub = '###'
+#ses = 'baselineYear1Arm1'
+#run = '01'
+#task = 'nback'
+
 
 # Using Taylor Taslo's convert txt to df code from github: tsalo/convert-eprime/ as could not use from package. 
 # Credit for lines #35 to #99 should be all given to Taylor.
@@ -104,7 +112,7 @@ def convert_to_numeric(df):
 # Create ArgumentParser object
 parser = argparse.ArgumentParser(description="This script runs and converts the .txt events data to events.tsv for each MID run.")
 
-# Add required positional arguments
+
 parser.add_argument("-i", "--in_dir", type=str, required=True,
                     help="Input directory path where the events file is within */func/")
 parser.add_argument("-o", "--out_dir", type=str, required=True,
@@ -117,7 +125,7 @@ parser.add_argument("-r", "--run", type=str, required=True,
                     help="run argument (e.g. 01, 02) with run prefix")
 parser.add_argument("-t", "--task", type=str, required=True,
                     help="task argument (e.g. MID, SST, nback)")
-# Parse command-line arguments
+
 args = parser.parse_args()
 
 # Assign values to variables
@@ -129,19 +137,8 @@ run = args.run
 task = args.task
 
 
-# testing
-#in_dir = '/Users/michaeldemidenko/Downloads'
-#out_dir = '/Users/michaeldemidenko/Downloads'
-#sub = '##'
-#ses = 'baselineYear1Arm1'
-#run = '01'
-#task = 'nback'
-
-
 # Setting up the file path
 filepath = f"{in_dir}/sub-{sub}_ses-{ses}_task-{task}_run-{run}_bold_EventRelatedInformation.txt"
-
-
 
 # some files are written in utf-16 as opposed to most using uts-8. Using try and except rule to circumvent errors
 # this, too, applies to checking the type of edge case errors when reading in files.
@@ -444,7 +441,7 @@ elif task == "nback":
             
             # getting onset times
             ready_var = [col for col in dat.columns 
-                        if ("GetReady" in col) and (col.endswith(".OnsetTime"))]
+                        if ("GetReady" in col) and (col.endswith(".OffsetTime"))]
             
             ready_run1 = dat.loc[dat['Run'] == 1, ready_var[0]].iloc[0]
             prep_run1 = dat.loc[dat['Run'] == 1, ready_var[0]].dropna().iloc[-1]

@@ -1,10 +1,13 @@
 import os
 import argparse
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Set the directory where the files are located
 #in_dir = '/Users/michaeldemidenko/Downloads'
 #out_dir = '/Users/michaeldemidenko/Downloads'
+#task = 'MID'
+
 
 # Create ArgumentParser object
 parser = argparse.ArgumentParser(description="Checks initial onset values and DiffTriggerTimes in events.tsvs")
@@ -24,12 +27,19 @@ in_dir = args.in_dir
 out_dir = args.out_dir
 task = args.task
 
-#task = 'MID'
 
-# Create an empty list to store the data
-loc_initial_onset = 'Cue.OnsetTime'
+
+# Assign col name based on task label & create an empty list to store the data
+if task == 'MID':
+    loc_initial_onset = 'Cue.OnsetTime'
+elif task == 'SST':
+    loc_initial_onset = 'BeginFix.OnsetTime'
+elif task == 'nback':
+    loc_initial_onset = 'CueFix.OnsetTime'
+
 diff_trigg = 'DiffTriggerTimes'
 data = []
+
 
 # Loop through all the files in the directory
 for filename in os.listdir(in_dir):
@@ -62,5 +72,13 @@ for filename in os.listdir(in_dir):
 # Convert the list to a dataframe
 df = pd.DataFrame(data, columns=['filename', 'Cue.OnsetTime', 'DiffTriggerTimes'])
 
-# Save the dataframe to a CSV file
-df.to_csv(f'{out_dir}/task-MID_events-timing-info.csv', index=False)
+
+# plot and save distribution
+df['Cue.OnsetTime'].plot(kind='hist', bins=150)  # Plotting a histogram with 20 bins
+plt.xlabel('Cue Onset Time')  # Adding x-axis label
+plt.ylabel('Frequency')  # Adding y-axis label
+plt.title(f'Distribution of {task} Onset Times')
+
+# Save the dataframe to a CSV file ^ figure as .png
+df.to_csv(f'{out_dir}/ses-{ses}_task-{task}_events-timing-info.csv', index=False)
+plt.savefig(f'{out_dir}/ses-{ses}_task-{task}_events-onset_distribution.png')
