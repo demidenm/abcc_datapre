@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 # Set the directory where the files are located
 #in_dir = '/Users/michaeldemidenko/Downloads'
 #out_dir = '/Users/michaeldemidenko/Downloads'
-#task = 'MID'
+#task = 'nback'
 
 
 # Create ArgumentParser object
@@ -42,10 +42,12 @@ data = []
 
 
 # Loop through all the files in the directory
+print(f'Step 1: Extracting onset times from files for {task}')
+
 for filename in os.listdir(in_dir):
     
     # Check if the filename matches the pattern
-    if 'sub-' in filename and '_ses-' in filename and f'_task-{task}_run' in filename and '_events.tsv' in filename:
+    if 'sub-' in filename and '_ses-' in filename and f'_task-{task}_run-' in filename and '_events.tsv' in filename:
         
         # Extract the sub, ses, and run numbers from the filename
         sub = filename.split('_')[0][4:]
@@ -69,16 +71,22 @@ for filename in os.listdir(in_dir):
         # Append the data to the list
         data.append((new_filename, cue_onset_time, diff_trigger_times))
 
-# Convert the list to a dataframe
-df = pd.DataFrame(data, columns=['filename', 'Cue.OnsetTime', 'DiffTriggerTimes'])
+# Convert the list to a dataframe & save
+print(f'Step 2: Creating DF w/ values and saving in output folder as: \n \t \t ses-{ses}_task-{task}_events-onset_distribution.png')
+
+df = pd.DataFrame(data, columns=['filename', 'TaskOnset', 'DiffTriggerTimes'])
+df.to_csv(f'{out_dir}/ses-{ses}_task-{task}_events-timing-info.csv', index=False)
 
 
-# plot and save distribution
-df['Cue.OnsetTime'].plot(kind='hist', bins=150)  # Plotting a histogram with 20 bins
+# plot and save distribution as .png for non-na values
+print(f'Step 3: Creating distribution plot from DF and saving to: \n \t \t {out_dir}')
+
+na_count = df['TaskOnset'].isna().sum()
+print(f'\t \t {na_count} NA values in data which are excluded from plot')
+
+non_na_values = pd.to_numeric(df['TaskOnset'], errors='coerce').dropna()
+non_na_values.plot(kind='hist', bins=100)  # Plotting a histogram with 20 bins
 plt.xlabel('Cue Onset Time')  # Adding x-axis label
 plt.ylabel('Frequency')  # Adding y-axis label
 plt.title(f'Distribution of {task} Onset Times')
-
-# Save the dataframe to a CSV file ^ figure as .png
-df.to_csv(f'{out_dir}/ses-{ses}_task-{task}_events-timing-info.csv', index=False)
 plt.savefig(f'{out_dir}/ses-{ses}_task-{task}_events-onset_distribution.png')
