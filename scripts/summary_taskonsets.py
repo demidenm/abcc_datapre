@@ -88,5 +88,5 @@ non_na_values = pd.to_numeric(df['TaskOnset'], errors='coerce').dropna()
 non_na_values.plot(kind='hist', bins=100)  # Plotting a histogram with 20 bins
 plt.xlabel('Cue Onset Time')  # Adding x-axis label
 plt.ylabel('Frequency')  # Adding y-axis label
-plt.title(f'Distribution of {task} Onset Times')
+plt.title(f'Session {ses} Distribution of {task} Onset Times')
 plt.savefig(f'{out_dir}/ses-{ses}_task-{task}_events-onset_distribution.png')

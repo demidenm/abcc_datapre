@@ -6,6 +6,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from glob import glob
 
+
+# test sub,ses,task 
+#in_dir = '/Users/michaeldemidenko/Downloads'
+#out_dir = '/Users/michaeldemidenko/Downloads'
+#sub = '###'
+#ses = '2YearFollowUpYArm1'
+#task= 'MID'
+
+
 def convert_to_numeric(df):
     """
     Convert all object columns in the pd dataframe to numeric values.
@@ -44,13 +53,6 @@ out_dir = args.out_dir
 sub = args.sub
 ses = args.ses
 task = args.task
-
-# test sub,ses,task 
-#in_dir = '/Users/michaeldemidenko/Downloads'
-#out_dir = '/Users/michaeldemidenko/Downloads'
-#sub = '##'
-#ses = 'baselineYear1Arm1'
-#task= 'nback'
 
 # fine all files
 files = glob(f"{in_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0*_events.tsv", recursive=True)

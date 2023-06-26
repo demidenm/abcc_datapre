@@ -10,14 +10,15 @@ The script uses a parser to differentiate tasks and runs labels for the file pat
 The file path is constructed using the format:
 filepath = f"{in_dir}/sub-{sub}_ses-{ses}_task-{task}_run-{run}_bold_EventRelatedInformation.txt"
 
-Each scanner has an onset time for the scanner and the task itself. A differences is calculate and
+Each scanner has an onset time for the scanner and the task itself. A differences is calculated and
 saved to each *events.tsv file "DiffTriggerTimes". The onsets and durations for each task are 
-from the initiation of the scanner (e.g., calibration volumes). Thus, to adjust to onset of task,
-subtract from Onsets/Durations the DiffTriggerTimes column. 
+from the initiation of the task (e.g., after calibration volumes). Thus, to adjust to onset of scanner add
+to Onsets/Durations the DiffTriggerTimes column. 
 
-Note: For the SST task and the MID task, RTs/meanrts/SSDDur/StopSignal.Duration 
+Note: For the SST task and the MID task, RTs/meanrts/SSDDur/StopSignal/Duration 
 are left in miliseconds and note converted, as in other onset/durations to seconds (e.g. divided by 1000)
-Most recent edit: May 6, 2023.
+Most recent edit: June  25, 2023.
+
 """
 
 # testing
