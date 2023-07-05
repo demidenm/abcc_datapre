@@ -1,0 +1,31 @@
+{
+    "MID": {
+        "Overall Accuracy": .50,
+        "Overall MRT": 100,
+        "Trials Per Feedback Condition": {
+            "You earn $0.20!": 0,
+            "Neutral Miss": 0,
+            "You keep $5!": 0,
+            "You did not earn $5!": 0,
+            "You lose $0.20!": 0,
+            "You keep $0.20!": 0,
+            "You earn $5!": 0,
+            "You lose $5!": 0,
+            "You did not earn $0.20!": 0,
+            "Neutral Hit": 0
+        }
+    },
+    "NBack": {
+        "0-Back Accuracy": .50,
+        "2-Back Accuracy": .50,
+        "0-Back MRT": 100,
+        "2-Back MRT": 100
+    },
+    "SST": {
+        "Go Accuracy": .50,
+        "StopSig Accuracy": .30,
+        "Go MRT": 100,
+        "StopSig MRT": 100,
+        "SSRT": 0,
+    }
+}
