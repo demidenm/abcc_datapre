@@ -236,7 +236,7 @@ if task == "MID":
     # specifying some text
     text1=f"Summary of Subjects for Run 01 ({r1}) and Run 02 ({r2})."
     text2=f"Missing Run 01: {r1_miss} & Run 02: {r2_miss}"
-    text3=f"<br> Overall Probe Accuracy =< {acc_excl*100}% and/or Probe MRT =< {mrt_excl}ms"
+    text3=f"<br> Overall Probe Accuracy < {acc_excl*100}% and/or Probe MRT < {mrt_excl}ms"
     text4=f"N Excluded for Run1/Run2: <br> Accuracy = {n_accexl_r1}/{n_accexl_r2} & MRT = {n_mrtexl_r1}/{n_mrtexl_r2}"
     html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:26px;font-weight:bold;">{0}</h2>'.format(text1)
     html_output += '<h2 style="text-align:center;font-family:Helvetica;font-size:20px;">{0}</h2>'.format(text2)
@@ -468,8 +468,8 @@ elif task == "SST":
     html_output += '<h3 style="text-align:center;font-family:Helvetica;font-size:40px;font-weight:bold;color:orange;">{0}</h3>'.format(ses)
     text1=f"Summary of Subjects for Run 01 ({r1}) and Run 02 ({r2})."
     text2=f"Missing Run 01: {r1_miss} & Run 02: {r2_miss}"
-    text3=(f"<br> Accuracy for Go  =< {accgo_excl*100}%, Stop Signal =< {accstogsig_excl*100}%<br>"
-           f"MRT for Go  =< {mrtgo_excl}ms, Stop Signal =< {mrtstopsig_excl}ms and/or SSRT =< {mrtssrt_excl}ms")
+    text3=(f"<br> Accuracy for Go  < {accgo_excl*100}%, Stop Signal < {accstogsig_excl*100}%<br>"
+           f"MRT for Go  < {mrtgo_excl}ms, Stop Signal < {mrtstopsig_excl}ms and/or SSRT < {mrtssrt_excl}ms")
     text4 = (f"N Excluded Across Run1/Run2 : <br><br>"
          f"Run 1 Acc: Go {n_exclude_dict['goaccuracy_r1']}, StopSignal = {n_exclude_dict['stopsigaccuracy_r1']} <br>"
          f"Run 1 MRT: Go {n_exclude_dict['gomrt_r1']}, StopSignal = {n_exclude_dict['stopsigmrt_r1']}, SSRT = {n_exclude_dict['ssrt_r1']} <br>"
@@ -785,8 +785,8 @@ elif task == "nback":
     
     text1=f"Summary of Subjects for Run 01 ({r1}) and Run 02 ({r2})."
     text2=f"Missing Run 01: {r1_miss} & Run 02: {r2_miss}"
-    text3=(f"<br> Accuracy Overall =< {acc_excl*100}%, 0-Back =< {acc0back_excl*100}% and/or 0-Back =< {acc2back_excl*100}% <br>"
-           f"MRT Overall =< {mrt_excl}ms, 0-Back =< {mrt0back_excl}ms and/or 0-Back =< {mrt2back_excl}ms")
+    text3=(f"<br> Accuracy Overall < {acc_excl*100}%, 0-Back < {acc0back_excl*100}% and/or 0-Back < {acc2back_excl*100}% <br>"
+           f"MRT Overall < {mrt_excl}ms, 0-Back < {mrt0back_excl}ms and/or 0-Back < {mrt2back_excl}ms")
     text4=(f"N Excluded Across Run1/Run2 : <br><br>"
            f"Run 1 Acc: Overall {n_exclude_dict['overallacc_r1']}, 0-Back = {n_exclude_dict['0-backacc_r1']}, 2-Back = {n_exclude_dict['2-backacc_r1']} <br>"
            f"Run 1 MRT: Overall {n_exclude_dict['overallmrt_r1']}, 0-Back = {n_exclude_dict['0-backmrt_r1']}, 2-Back = {n_exclude_dict['2-backmrt_r1']} <br>"
