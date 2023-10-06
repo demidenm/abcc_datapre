@@ -1,6 +1,6 @@
 {
     "MID": {
-        "Overall Accuracy": .50,
+        "Overall Accuracy": 0.50,
         "Overall MRT": 100,
         "Trials Per Feedback Condition": {
             "You earn $0.20!": 0,
@@ -16,16 +16,18 @@
         }
     },
     "NBack": {
-        "0-Back Accuracy": .50,
-        "2-Back Accuracy": .50,
+        "Overall Accuracy": 0.85,
+        "Overall MRT": 350,
+        "0-Back Accuracy": 0.50,
+        "2-Back Accuracy": 0.50,
         "0-Back MRT": 100,
         "2-Back MRT": 100
     },
     "SST": {
-        "Go Accuracy": .50,
-        "StopSig Accuracy": .30,
+        "Go Accuracy": 0.50,
+        "StopSig Accuracy": 0.30,
         "Go MRT": 100,
         "StopSig MRT": 100,
-        "SSRT": 0,
+        "SSRT": 0
     }
 }

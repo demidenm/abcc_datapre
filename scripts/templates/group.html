@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        {{ boxplots_css }}
+    </style>
+    <script type="text/javascript">
+        {{ d3_js }}
+    </script>
+    <script type="text/javascript">
+        {{ boxplots_js }}
+    </script>
+    <title>Task Summary: group {{ modality }}
+report</title>
+</head>
+<body>
+    <h1>Task Summary: group {{ modality }}
+report</h1>
+<h2>Summary</h2>
+<ul class="simple">
+<li>Date and time: {{ timestamp }}.</li>
+<li>Total Subjects : {{ subjects }}.</li>
+<li>Run Subjects : {{ runs }}.</li>
+<h2>Summary</h2>
+{{ summary_task }}
+<br>
+<br>
+<h2>Plots</h2>
+{% for data_csv in csv_groups %}
+<div class="chart-wrapper" id="chart-group{{ loop.index0 }}"></div>
+<pre class="csvdata" id="data-csv{{ loop.index0 }}" style="display: none">
+{{ data_csv }}</pre>
+{% endfor %}
+
+
+<script type="text/javascript">
+    var chart1;
+    function add(a, b) {
+        return a + b;
+    }
+
+    function plotData(group) {
+        var data = d3.csv.parse(d3.select("#data-csv" + group).text(), function(d) {
+            return {
+                iqm: d.iqm,
+                value: +d.value,
+                label: d.label,
+                units: d.units,
+                image_path: d.image_path // Add this line for image paths
+            };
+        });
+
+        var a = {};
+        var nIQMs = 0;
+        data.forEach(function(d) {
+            if (!a.hasOwnProperty(d.iqm)) {
+                a[d.iqm] = 1;
+                nIQMs += 1;
+            }
+        });
+
+        if (data.length > 0) {
+            chart1 = makeDistroChart({
+                data: data,
+                xName: 'iqm',
+                yName: 'value',
+                selector: "#chart-group" + group,
+                chartSize: { height: 300, width: 100 + 60 * nIQMs },
+                constrainExtremes: false,
+                modality: '{{ modality }}'
+            });
+
+            chart1.renderDataPlots();
+            chart1.dataPlots.change({
+                showPlot: true,
+                plotType: 20,
+                padding: 15,
+                showBeanLines: false,
+                customRenderer: function(ctx, d) {
+                    // Draw the data point
+                    ctx.fillStyle = '#555';
+                    ctx.fillRect(d.x - 5, d.y - 5, 10, 10);
+
+                    // Add a click event listener to open the image
+                    ctx.canvas.addEventListener('click', function() {
+                        console.log(d)
+                        var image_path = d.datum.image_path;
+                        window.open(image_path, '_blank').focus();
+                    });
+
+                    // Return true to allow the chart to continue rendering
+                    return true;
+                }
+            });
+
+            chart1.renderBoxPlot();
+            chart1.boxPlots.show({
+                showWhiskers: true,
+                showOutliers: false,
+                boxWidth: 15,
+                lineWidth: 15,
+                padding: -5,
+                colors: ['#555']
+            });
+        }
+    }
+
+    // Loop through your CSV groups and call plotData for each group
+    {% for data_csv in csv_groups %}
+    plotData({{ loop.index0 }});
+    {% endfor %}
+</script>
+</body>
+</html>

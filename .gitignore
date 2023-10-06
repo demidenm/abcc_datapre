@@ -9,3 +9,6 @@
 scripts/create_mid_html.py
 scripts/create_sst_html.py
 scripts/create_mid_html.py
+scripts/checking_abcdfasttract_notes.py
+scripts/__pycache__/group.cpython-38.pyc
+scripts/__pycache__/__init__.cpython-38.pyc

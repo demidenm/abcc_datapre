@@ -43,7 +43,7 @@ task = args.task
 # get file that describes contents of report
 with open(f'./describe_report_{task}.txt', 'r') as file:
     task_describe = file.read()
-with open('./html_exclcriteria.json', 'r') as f:
+with open('html_exclcriteria.json', 'r') as f:
     task_excl = json.load(f)
     
     
