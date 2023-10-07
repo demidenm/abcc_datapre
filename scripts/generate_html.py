@@ -12,7 +12,7 @@ Author: Michael Demidenko
 Date: Current Date
 """
 
-from scripts import group
+from . import group
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -20,13 +20,15 @@ import json
 import glob
 import os
 
+print(os.getcwd())
+
 task = 'MID'
-folder_path = f"../baselineYear1Arm1_{task}"
-out_path = "../beh_html"
-html_desc = f"./templates/describe_report_{task}.txt"
+folder_path = f"./baselineYear1Arm1_{task}"
+out_path = "./beh_html"
+html_desc = f"./scripts/templates/describe_report_{task}.txt"
 
 # Create an empty DataFrame with the desired columns
-columns = ['bids_name', 'subject_id', 'session_id', 'task_id','image_path']
+columns = ['bids_name', 'subject_id', 'session_id', 'task_id', 'image_path']
 column_suffixes = ['mrt', 'acc', 'mrt_hit', 'mrt_mis',
                    'cue_acc_lgrew', 'cue_acc_lgpun', 'cue_acc_neut',
                    'cue_acc_smrew', 'cue_acc_smpun',
@@ -40,15 +42,25 @@ df = pd.DataFrame(columns=columns)
 # List of JSON file paths
 json_files = glob.glob(f"{folder_path}/*task-{task}_beh-descr.json")
 
+# count # runs
+r1 = 0
+r2 = 0
 for file_path in json_files:
     sub_id = file_path.split('_')[1].split('-')[1]
     ses_id = file_path.split('_')[2].split('-')[1]
     task_id = file_path.split('_')[3].split('-')[1]
     basename = os.path.splitext(os.path.basename(file_path))[0]
-    image_path = f"{folder_path}/{basename}.png"
+    image_path = f".{folder_path}/{basename}.png"
 
     with open(file_path, 'r') as f:
         data = json.load(f)
+
+    for item in data:
+        if "Run 1" in json.dumps(item):
+            r1 += 1
+        if "Run 2" in json.dumps(item):
+            r2 += 1
+
     runs = []
     for run_name, run_data in data.items():
         if run_name.startswith('Run '):
@@ -92,67 +104,62 @@ for file_path in json_files:
 df.to_csv(f'{folder_path}/group_{task}.csv', index=False)
 
 items = {
-        "mid": [
-            (["Acc","acc_run1","acc_run2"], '%'),
-            (["Cue_Acc","cue_acc_lgrew-run1","cue_acc_lgpun-run1","cue_acc_neut-run1","cue_acc_smrew-run1","cue_acc_smpun-run1",],
-             '% - Run1'),
-            (["Cue_Acc","cue_acc_lgrew-run2","cue_acc_lgpun-run2","cue_acc_neut-run2","cue_acc_smrew-run2", "cue_acc_smpun-run2",],
-             '% - Run1'),
-            (["MRT","mrt_run1","mrt_run2",], 'ms'),
-            (["MRT",
-              "mrt_hit-run1",
-              "mrt_mis-run1",
-              "mrt_hit-run2",
-              "mrt_mis-run2",],
-             'ms - 1/0'),
-            (["Cue_MRT",
-              "cue_mrt_lgrew-run1", "cue_mrt_lgpun-run1",
-              "cue_mrt_neut-run1", "cue_mrt_smrew-run1",
-              "cue_mrt_smpun-run1",],
-             'ms'),
-            (["Cue_MRT",
-              "cue_mrt_lgrew-run2", "cue_mrt_lgpun-run2",
-              "cue_mrt_neut-run2", "cue_mrt_smrew-run2",
-              "cue_mrt_smpun-run2",],
-             'ms'),
-            (["Feedback",
-              "feedback_h-lgrew-run1", "feedback_lgrew_nmiss_run1", "feedback_h-smrew-run1", "feedback_m-smrew-run1",
-              "feedback_h-neut-run1", "feedback_m-neut-run1", "feedback_h-smpun-run1", "feedback_m-smpun-run1",
-              "feedback_h-lgpun-run1", "feedback_m-lgpun-run1", ],
-             'n - 1/0'),
-            (["Feedback",
-              "feedback_h-lgrew-run2","feedback_lgrew_nmiss_run2", "feedback_h-smrew-run2","feedback_m-smrew-run2",
-              "feedback_h-neut-run2","feedback_m-neut-run2", "feedback_h-smpun-run2","feedback_m-smpun-run2",
-              "feedback_h-lgpun-run2", "feedback_m-lgpun-run2",],
-             'n - 1/0'),
-        ],
-        "nback": [
-            (["tbd"], None),
-            (["tbd"], None),
-            (["tbd", "a", "b", "c"], "d"),
-        ],
-        "sst": [
-            (["tbd"], None),
-            (["tbd"], None),
-            (["tbd", "a", "b", "c"], "d"),
-        ],
-    }
+    "MID": [
+        (["Acc", "acc_run1", "acc_run2"], '%'),
+        (["Cue_Acc", "cue_acc_lgrew-run1", "cue_acc_lgpun-run1", "cue_acc_neut-run1", "cue_acc_smrew-run1",
+          "cue_acc_smpun-run1", ],
+         '% - Run1'),
+        (["Cue_Acc", "cue_acc_lgrew-run2", "cue_acc_lgpun-run2", "cue_acc_neut-run2", "cue_acc_smrew-run2",
+          "cue_acc_smpun-run2", ],
+         '% - Run1'),
+        (["MRT", "mrt_run1", "mrt_run2", ], 'ms'),
+        (["MRT",
+          "mrt_hit-run1",
+          "mrt_mis-run1",
+          "mrt_hit-run2",
+          "mrt_mis-run2", ],
+         'ms - 1/0'),
+        (["Cue_MRT",
+          "cue_mrt_lgrew-run1", "cue_mrt_lgpun-run1",
+          "cue_mrt_neut-run1", "cue_mrt_smrew-run1",
+          "cue_mrt_smpun-run1", ],
+         'ms'),
+        (["Cue_MRT",
+          "cue_mrt_lgrew-run2", "cue_mrt_lgpun-run2",
+          "cue_mrt_neut-run2", "cue_mrt_smrew-run2",
+          "cue_mrt_smpun-run2", ],
+         'ms'),
+        (["Feedback",
+          "feedback_h-lgrew-run1", "feedback_lgrew_nmiss_run1", "feedback_h-smrew-run1", "feedback_m-smrew-run1",
+          "feedback_h-neut-run1", "feedback_m-neut-run1", "feedback_h-smpun-run1", "feedback_m-smpun-run1",
+          "feedback_h-lgpun-run1", "feedback_m-lgpun-run1", ],
+         'n - 1/0'),
+        (["Feedback",
+          "feedback_h-lgrew-run2", "feedback_lgrew_nmiss_run2", "feedback_h-smrew-run2", "feedback_m-smrew-run2",
+          "feedback_h-neut-run2", "feedback_m-neut-run2", "feedback_h-smpun-run2", "feedback_m-smpun-run2",
+          "feedback_h-lgpun-run2", "feedback_m-lgpun-run2", ],
+         'n - 1/0'),
+    ],
+    "nback": [
+        (["efc"], None),
+        (["fber"], None),
+        (["fwhm", "fwhm_x", "fwhm_y", "fwhm_z"], "mm"),
+    ],
+}
 
-
-with open(html_desc, "r",encoding="utf-8") as input_html:
+with open(html_desc, "r", encoding="utf-8") as input_html:
     html_content = input_html.read()
 
-modality = task
+modality = [task]
 
 for mod in modality:
-
     csv_path = Path(f'{folder_path}/group_{task}.csv')
     out_html = f"{out_path}/group_{mod}.html"
     group.gen_html(
         csv_file=csv_path,
-        mod= mod,
+        mod=mod,
         n_subjects=len(json_files),
-        runs=[len(json_files),len(json_files)],
+        runs=[r1, r2],
         description=html_content,
         qc_items=items,
         out_file=out_html

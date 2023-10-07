@@ -27,11 +27,11 @@ Most recent edit: June  25, 2023.
 #sub = '###'
 #ses = 'baselineYear1Arm1'
 #run = '01'
-#task = 'nback'
+#task = 'sst'
 
 
 # Using Taylor Taslo's convert txt to df code from github: tsalo/convert-eprime/ as could not use from package. 
-# Credit for lines #35 to #99 should be all given to Taylor.
+# Credit for lines #35 to #99 should be given to Taylor.
 def remove_unicode(string):
     """
     Removes unicode characters in string.
@@ -109,6 +109,7 @@ def convert_to_numeric(df):
             except ValueError:
                 pass
     return df
+
 
 # Create ArgumentParser object
 parser = argparse.ArgumentParser(description="This script runs and converts the .txt events data to events.tsv for each MID run.")
@@ -376,7 +377,7 @@ elif task == "SST":
                      "SSD.CRESP","SSD.OnsetDelay","SSD.OnsetTime",
                      "Stimulus","SSD.RT","SSD.RTTime","SSDDur",
                      "Stop_nback","StopDur", "StopSignal.ACC","StopSignal.OnsetTime","StopSignal.Duration",
-                     "StopSignal.RESP","StopSignal.RT","StopSignal.RTTime",
+                     "StopSignal.RESP","StopSignal.RT","StopSignal.RTTime","StopSignal.DurationError",
                      "TriggerTime","TriggerTimeAlt"
                      ]
         cols_to_keep = [col for col in keep_cols if col in df_subset.columns]
@@ -388,7 +389,9 @@ elif task == "SST":
                          "SSD.OnsetTime", "StopSignal.OnsetTime", "StopSignal.RTTime"]
         
         duration_subtract = ["BeginFix.Duration","Fix.Duration","Go.Duration",
-                            "Jitter"] # leaving SSDDur and StopSignal.Duration in ms
+                            "Jitter"] 
+        
+        # leaving SSDDur and StopSignal.Duration in ms ****
         
         for col_time in time_subtract:
             df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
