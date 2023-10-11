@@ -1,42 +1,38 @@
+"""
+This Python script performs the following tasks:
+
+1. Removes Unicode characters from a given string using the 'remove_unicode' function.
+2. Converts a raw E-Prime output text file into a Pandas DataFrame using the 'text_to_df' function. The text file is
+read, and metadata and data are extracted.
+3. Depending on the task specified (MID, SST, or nback), it processes the data for each task type:
+- For the MID task, it processes and extracts relevant columns, converts times (ms) to seconds, and writes the data to
+   separate TSV files for each run.
+- For the SST task, it similarly processes and extracts relevant columns, converts times (ms) to seconds, and writes the
+   data to separate TSV files for each run.
+- For the nback task, it processes and extracts relevant columns, converts times to seconds, and writes the data to
+   separate TSV files for each run.
+
+This script is designed to preprocess E-Prime output data files for ABCD Study tasks like MID, SST, and nback,
+and prepare the data for subsequent analysis.
+
+Author: Michael Demidenko
+Date: June 2023
+"""
+
 import argparse
 import pandas as pd
 import numpy as np
 from collections import OrderedDict
 
-"""
-Script created by Michael Demidenko to convert e-prime data for ABCD study SST, MID and nback tasks. 
-Edge cases are considered given differences across eprime outputs and scanners - some errors may still exist.
-The script uses a parser to differentiate tasks and runs labels for the file path. 
-The file path is constructed using the format:
-filepath = f"{in_dir}/sub-{sub}_ses-{ses}_task-{task}_run-{run}_bold_EventRelatedInformation.txt"
 
-Each scanner has an onset time for the scanner and the task itself. A differences is calculated and
-saved to each *events.tsv file "DiffTriggerTimes". The onsets and durations for each task are 
-from the initiation of the task (e.g., after calibration volumes). Thus, to adjust to onset of scanner add
-to Onsets/Durations the DiffTriggerTimes column. 
-
-Note: For the SST task and the MID task, RTs/meanrts/SSDDur/StopSignal/Duration 
-are left in miliseconds and note converted, as in other onset/durations to seconds (e.g. divided by 1000)
-Most recent edit: June  25, 2023.
-
-"""
-
-# testing
-#in_dir = '/Users/michaeldemidenko/Downloads'
-#out_dir = '/Users/michaeldemidenko/Downloads'
-#sub = '###'
-#ses = 'baselineYear1Arm1'
-#run = '01'
-#task = 'sst'
-
-
-# Using Taylor Taslo's convert txt to df code from github: tsalo/convert-eprime/ as could not use from package. 
-# Credit for lines #35 to #99 should be given to Taylor.
+# Using Taylor Taslo's script convert txt to df code from github: tsalo/convert-eprime/ as could not use from package.
+# Credit for lines #36 to #93 should be given to Taylor.
 def remove_unicode(string):
     """
     Removes unicode characters in string.
     """
     return ''.join([val for val in string if 31 < ord(val) < 127])
+
 
 def text_to_df(text_file):
     """
@@ -58,8 +54,8 @@ def text_to_df(text_file):
         # In cases of an experiment crash, the final LogFrame is never written, and the experiment metadata
         # (Subject, VersionNumber, etc.) isn't collected by the indices above. We can manually include the
         # metadata-containing Header Frame to collect these data from a partial-run crash dump.
-        start_index = [i for i,row in enumerate(filtered_data) if row == '*** Header Start ***'] + start_index
-        end_index = [i for i,row in enumerate(filtered_data) if row == '*** Header End ***'] + end_index
+        start_index = [i for i, row in enumerate(filtered_data) if row == '*** Header Start ***'] + start_index
+        end_index = [i for i, row in enumerate(filtered_data) if row == '*** Header End ***'] + end_index
     n_rows = min(len(start_index), len(end_index))
 
     # Find column headers and remove duplicates.
@@ -97,24 +93,24 @@ def text_to_df(text_file):
             df.loc[:, col] = df.loc[non_nan_idx[0], col]
     return df
 
-def convert_to_numeric(df):
+
+def convert_to_numeric(dataframe):
     """
     Convert all object columns in the pd dataframe to numeric values.
 
     """
-    for col in df.columns:
-        if df[col].dtype == 'object':
+    for col in dataframe.columns:
+        if dataframe[col].dtype == 'object':
             try:
-                df[col] = pd.to_numeric(df[col])
+                dataframe[col] = pd.to_numeric(dataframe[col])
             except ValueError:
                 pass
     return df
 
 
 # Create ArgumentParser object
-parser = argparse.ArgumentParser(description="This script runs and converts the .txt events data to events.tsv for each MID run.")
-
-
+parser = argparse.ArgumentParser(description="This script runs and converts the .txt events "
+                                             "data to events.tsv for each MID run.")
 parser.add_argument("-i", "--in_dir", type=str, required=True,
                     help="Input directory path where the events file is within */func/")
 parser.add_argument("-o", "--out_dir", type=str, required=True,
@@ -153,31 +149,31 @@ try:
     # check for edat2 in row 1
     if ".edat2" in dat.columns[0]:
         # check for 2nd row with edited data.. remove if label exist need to remove redudant rows
-        if "edited data" in dat.iloc[0,0]: 
+        if "edited data" in dat.iloc[0, 0]:
             dat = pd.read_csv(filepath, skiprows=2, sep="\t")
         else:
             dat = pd.read_csv(filepath, skiprows=1, sep="\t")
     elif "Header Start" in dat.columns[0]:
         dat = text_to_df(filepath)
     else:
-        dat = pd.read_csv(filepath, sep = "\t")
+        dat = pd.read_csv(filepath, sep="\t")
 
 # If UTF-8 encoding fails, try reading the file with UTF-16 encoding
 except UnicodeDecodeError:
     try:
-        dat = pd.read_csv(filepath, encoding='utf-16', nrows = 3)
+        dat = pd.read_csv(filepath, encoding='utf-16', nrows=3)
     except pd.errors.ParserError:
-        dat = pd.read_csv(filepath, encoding='utf-16', nrows = 1)
+        dat = pd.read_csv(filepath, encoding='utf-16', nrows=1)
     # Chech for .edat2 in row1
     if ".edat2" in dat.columns[0]:
-        if "edited data" in dat.iloc[0,0]:            
+        if "edited data" in dat.iloc[0, 0]:
             dat = pd.read_csv(filepath, encoding='utf-16', skiprows=2, sep="\t")
         else:
             dat = pd.read_csv(filepath, encoding='utf-16', skiprows=1, sep="\t")
     elif "Header Start" in dat.columns[0]:
         dat = text_to_df(filepath)
     else:
-        dat = pd.read_csv(filepath, encoding='utf-16', sep = "\t")
+        dat = pd.read_csv(filepath, encoding='utf-16', sep="\t")
     
 # assigned subdject ID column from NARGUID
 dat['Subject'] = dat['NARGUID']
@@ -194,15 +190,16 @@ if task == "MID":
         dat['Run'] = dat['Run'].fillna(dat['Waiting4Scanner.Cycle'].combine_first(dat['PeriodList.Cycle']))
         dat['SubTrial'] = dat['RunList.Sample']
 
-    # specify columns that have the start of scanner time (including initial volumes: GetReady; not calib volumes: PrepTime)
+    # specify columns that have the start of scanner time
+    # (including initial volumes: GetReady; not calib volumes: PrepTime)
     prep_var = "PrepTime.OffsetTime"
     ready_var = "GetReady.RTTime"
 
     # Save the values for preptime and getready time (includes volume prep alt)
     prep_per_run = [lst[-1] for lst in (dat.groupby("Run")[prep_var]
-                                .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
+                                        .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
     ready_per_run = [lst[0] for lst in (dat.groupby("Run")[ready_var]
-                                .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
+                                        .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
 
     # remove NA subtrial columns
     dat = dat[~dat['SubTrial'].isna()]
@@ -221,47 +218,43 @@ if task == "MID":
             
         # before conversion, convert values to numeric to ensure not objects 
         df = dat
-        df_subset = convert_to_numeric(df)
+        df_subset = convert_to_numeric(dataframe=df)
         df_subset = df[df['Run'] == r]
-        
-        
+
         # keep column names for the output behavioral files, modify as needed
-        keep_cols = ["Subject","Handedness","Run","SubTrial","Condition",
-                     "Cue.OnsetTime","Cue.Duration",
-                     "Anticipation.Duration","Anticipation.OnsetTime",
-                     "Probe.Duration","Probe.OnsetTime","Probe.RESP",
-                     "Result","prbacc","prbrt","OverallRT","meanrt",
-                     "moneyamt","ResponseCheck",
-                     "Feedback.OnsetTime","FeedbackDuration",
-                     "SessionDate","TriggerTime","TriggerTimeAlt"]
+        keep_cols = ["Subject", "Handedness", "Run", "SubTrial", "Condition",
+                     "Cue.OnsetTime", "Cue.Duration",
+                     "Anticipation.Duration", "Anticipation.OnsetTime",
+                     "Probe.Duration", "Probe.OnsetTime", "Probe.RESP",
+                     "Result", "prbacc", "prbrt", "OverallRT", "meanrt",
+                     "moneyamt", "ResponseCheck",
+                     "Feedback.OnsetTime", "FeedbackDuration",
+                     "SessionDate", "TriggerTime", "TriggerTimeAlt"]
         
         cols_to_keep = [col for col in keep_cols if col in df_subset.columns]
         df_subset = df_subset[cols_to_keep]
 
-
         # Converting ms to seconds; ONLY [onset times] subtract trigger time
-        time_subtract = ["Cue.OnsetTime","Anticipation.OnsetTime","Probe.OnsetTime","Feedback.OnsetTime"]
+        time_subtract = ["Cue.OnsetTime", "Anticipation.OnsetTime", "Probe.OnsetTime", "Feedback.OnsetTime"]
         
-        duration_subtract = ["Cue.Duration","Anticipation.Duration","Probe.Duration",
-                            "FeedbackDuration"] # leaving RT in ms
+        duration_subtract = ["Cue.Duration", "Anticipation.Duration", "Probe.Duration",
+                             "FeedbackDuration"] # leaving RT in ms
         
         for col_time in time_subtract:
             df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
             
         for dur_time in duration_subtract:
             df_subset[dur_time] = df_subset[dur_time]/1000
-        
-        
+
         # create diff between scanner start and task start
         df_subset["DiffTriggerTimes"] = (df_subset["TriggerTimeAlt"]-df_subset["TriggerTime"])/1000
 
-        
         # writeout .tsv per run
-        df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-MID_run-0{r}_events.tsv", sep = '\t', index = False)
+        df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-MID_run-0{r}_events.tsv", sep='\t', index=False)
     
 elif task == "SST":
     # creating run and trial labels using try/except. Some eprime files are written oddly, so this info isn't always avail
-    # need to create these columns to use in the group for select for readyruns + running by run
+    # need to create these columns to use for readyruns + running by run
     try:
         unique_runs = dat['Trial'].unique().astype('int')
         if 1 < max(unique_runs) < 5:
@@ -271,10 +264,10 @@ elif task == "SST":
     except KeyError:
         run_cols = [col for col in dat.columns 
                     if ("TestList" in col) and (col.endswith("A.Cycle") or col.endswith("B.Cycle"))]
-        dat['Run'] = np.where(dat[run_cols[0]] == "1", 1, 
-                            np.where(dat[run_cols[1]] == "1", 2, 0)).astype(int)
+        dat['Run'] = np.where(dat[run_cols[0]] == "1", 1,
+                              np.where(dat[run_cols[1]] == "1", 2, 0)).astype(int)
         dat['Run'] = np.where((dat['Run'] == 0) & (dat.index <= 16), 1,
-                      np.where((dat['Run'] == 0) & (dat.index > 16), 2, dat['Run']))
+                              np.where((dat['Run'] == 0) & (dat.index > 16), 2, dat['Run']))
 
     # specify columns that have the start of scanner time (including initial volumes: GetReady; not calib volumes: PrepTime)
     if 'SiemensPad.OnsetTime' in dat.columns:
@@ -283,10 +276,10 @@ elif task == "SST":
         prep_var = "SiemensPad.OffsetTime"
         
         # Save the values for preptime and getready time (includes volume prep alt)
-        prep_per_run = dat.groupby("Run")[prep_var].apply(lambda lst: 
+        prep_per_run = dat.groupby("Run")[prep_var].apply(lambda lst:
+                                                          [value for value in lst if pd.notna(value)]).tolist()
+        ready_per_run = dat.groupby("Run")[ready_var].apply(lambda lst:
                                                             [value for value in lst if pd.notna(value)]).tolist()
-        ready_per_run = dat.groupby("Run")[ready_var].apply(lambda lst: 
-                                                              [value for value in lst if pd.notna(value)]).tolist()
             
     elif 'GetReady.RTTime' in dat.columns:
         #GE columns
@@ -295,15 +288,14 @@ elif task == "SST":
         # the eprime data has a multiple valunes in GetReady.RTTime, start of scanner is first value of list per run
         # after initial values the onset is the last value
         ready_per_run = [lst[0] for lst in (dat.groupby("Run")[ready_var]
-                                    .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
+                                            .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
         prep_per_run = [lst[-1] for lst in (dat.groupby("Run")[ready_var]
-                                    .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
-        
-        
+                                            .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
+
     elif any(col.startswith("Wait4Scanner") and col.endswith(".RTTime") for col in dat.columns):
         #alt columns
-        ready_var = [col for col in dat.columns 
-                    if ("Wait4Scanner" in col) and (col.endswith(".RTTime"))]
+        ready_var = [col for col in dat.columns
+                     if ("Wait4Scanner" in col) and (col.endswith(".RTTime"))]
         
         ready_run1 = dat.loc[dat['Run'] == 1, ready_var[0]].iloc[0]
         prep_run1 = dat.loc[dat['Run'] == 1, ready_var[0]].dropna().iloc[-1]
@@ -311,14 +303,14 @@ elif task == "SST":
         prep_run2 = dat.loc[dat['Run'] == 2, ready_var[1]].dropna().iloc[-1]
         
         # Save the values for preptime (main) and getready time (includes volume prep alt)
-        ready_per_run = [ready_run1,ready_run2]
-        prep_per_run = [prep_run1,prep_run2]
+        ready_per_run = [ready_run1, ready_run2]
+        prep_per_run = [prep_run1, prep_run2]
         
     elif 'Waiting4ScannerGE' in dat.columns:
         #alt columns
         BeginFix_Onset = "BeginFix.OnsetTime"
         fix_start_per_run = [lst[0] for lst in (dat.groupby("Run")["BeginFix.OnsetTime"]
-                                    .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
+                                                .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
         
         ready_var = "Waiting4ScannerGE"
         length_ready_var = dat.groupby('Run')['Waiting4ScannerGE'].apply(lambda x: x.notna().sum()).tolist()
@@ -329,21 +321,17 @@ elif task == "SST":
         tr_time = 800
         
         ready_per_run = [fix_start_per_run[0]-(length_ready_var[0]*tr_time),
-                        fix_start_per_run[1]-(length_ready_var[1]*tr_time)]
-        prep_per_run = [fix_start_per_run[0]-(1*tr_time),fix_start_per_run[1]-(1*tr_time)]
-        
-        
-        
+                         fix_start_per_run[1]-(length_ready_var[1]*tr_time)]
+        prep_per_run = [fix_start_per_run[0]-(1*tr_time), fix_start_per_run[1]-(1*tr_time)]
+
     # curate running Trials column for each run, drop NA columns to reduce preptime
     run_trial_cols = [col for col in dat.columns if ("TestList" in col) and (col.endswith("A") or col.endswith("B"))]
 
-
     try:
-        dat['Trials'] = np.where(dat[run_trial_cols[0]].notnull(), dat[run_trial_cols[0]], 
-                               np.where(dat[run_trial_cols[1]].notnull(), dat[run_trial_cols[1]], np.nan))
+        dat['Trials'] = np.where(dat[run_trial_cols[0]].notnull(), dat[run_trial_cols[0]],
+                                 np.where(dat[run_trial_cols[1]].notnull(), dat[run_trial_cols[1]], np.nan))
     except IndexError:
         dat['Trials'] = np.where(dat[run_trial_cols[0]].notnull(), dat[run_trial_cols[0]], np.nan)
-    
     
     # Create Subtrial column remove NA subtrial columns
     dat = dat[~dat['Trials'].isna()]
@@ -362,53 +350,49 @@ elif task == "SST":
             
         # before conversion, convert values to numeric to ensure not objects 
         df = dat
-        df_subset = convert_to_numeric(df)
+        df_subset = convert_to_numeric(dataframe=df)
         df_subset = df[df['Run'] == r]
-        
-        
+
         # keep column names for the output behavioral files, modify as needed
-        keep_cols = ["Subject","Handedness","Trials","Procedure[SubTrial]","TrialCode",
-                     "BeginFix.OnsetTime", "BeginFix.Duration","CorrectAnswer",
-                     "EndFix.OffsetTime","EndFix.Duration",
-                     "Fix.OnsetTime","Fix.FinishTime","Fix.Duration",
-                     "Fix.RESP","Fix.RT",
-                     "Go.OnsetTime","Go.Duration","Go.FinishTime","Go.ACC","Go.CRESP",
-                     "Go.StartTime","Go.RTTime","Go.RT","Jitter",
-                     "SSD.CRESP","SSD.OnsetDelay","SSD.OnsetTime",
-                     "Stimulus","SSD.RT","SSD.RTTime","SSDDur",
-                     "Stop_nback","StopDur", "StopSignal.ACC","StopSignal.OnsetTime","StopSignal.Duration",
-                     "StopSignal.RESP","StopSignal.RT","StopSignal.RTTime","StopSignal.DurationError",
-                     "TriggerTime","TriggerTimeAlt"
+        keep_cols = ["Subject", "Handedness", "Trials", "Procedure[SubTrial]", "TrialCode",
+                     "BeginFix.OnsetTime", "BeginFix.Duration", "CorrectAnswer",
+                     "EndFix.OffsetTime", "EndFix.Duration",
+                     "Fix.OnsetTime", "Fix.FinishTime", "Fix.Duration",
+                     "Fix.RESP", "Fix.RT",
+                     "Go.OnsetTime", "Go.Duration", "Go.FinishTime", "Go.ACC", "Go.CRESP",
+                     "Go.StartTime", "Go.RTTime", "Go.RT", "Jitter",
+                     "SSD.CRESP", "SSD.OnsetDelay", "SSD.OnsetTime",
+                     "Stimulus", "SSD.RT", "SSD.RTTime", "SSDDur",
+                     "Stop_nback", "StopDur", "StopSignal.ACC", "StopSignal.OnsetTime", "StopSignal.Duration",
+                     "StopSignal.RESP", "StopSignal.RT", "StopSignal.RTTime", "StopSignal.DurationError",
+                     "TriggerTime", "TriggerTimeAlt"
                      ]
+
         cols_to_keep = [col for col in keep_cols if col in df_subset.columns]
         df_subset = df_subset[cols_to_keep]
         
         # subtract Onset/Finish times + adjust duration to seconds
-        time_subtract = ["BeginFix.OnsetTime","Fix.OnsetTime","Fix.FinishTime",
-                         "Go.OnsetTime","Go.FinishTime","Go.StartTime","Go.RTTime",
+        time_subtract = ["BeginFix.OnsetTime", "Fix.OnsetTime", "Fix.FinishTime",
+                         "Go.OnsetTime", "Go.FinishTime", "Go.StartTime", "Go.RTTime",
                          "SSD.OnsetTime", "StopSignal.OnsetTime", "StopSignal.RTTime"]
         
-        duration_subtract = ["BeginFix.Duration","Fix.Duration","Go.Duration",
-                            "Jitter"] 
-        
+        duration_subtract = ["BeginFix.Duration", "Fix.Duration", "Go.Duration", "Jitter"]
         # leaving SSDDur and StopSignal.Duration in ms ****
-        
+
         for col_time in time_subtract:
             df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
             
         for dur_time in duration_subtract:
             df_subset[dur_time] = df_subset[dur_time]/1000
-        
-        
+
         # create diff between scanner start and task start
         df_subset["DiffTriggerTimes"] = (df_subset["TriggerTimeAlt"]-df_subset["TriggerTime"])/1000
         
         # writeout .tsv per run
-        df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0{r}_events.tsv", sep = '\t', index = False)
+        df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0{r}_events.tsv", sep='\t', index=False)
         
 elif task == "nback":
     # creating run and trial labels using try/except. Some eprime files are written oddly, so this info isn't always avail
-        
     # specify columns that have the start of scanner time (including initial volumes: GetReady; not calib volumes: PrepTime)
     if 'SiemensPad.OnsetTime' in dat.columns:
         #Siemens eprime cols
@@ -425,13 +409,12 @@ elif task == "nback":
             dat['Run'] = 1
         else:
             dat['Run'] = np.where(dat.index < row_run2_start, 1, 2)
-        
-        
+
         # create/extract scanner ready/prep details
-        prep_per_run = dat.groupby("Run")[prep_var].apply(lambda lst: 
+        prep_per_run = dat.groupby("Run")[prep_var].apply(lambda lst:
+                                                          [value for value in lst if pd.notna(value)]).tolist()
+        ready_per_run = dat.groupby("Run")[ready_var].apply(lambda lst:
                                                             [value for value in lst if pd.notna(value)]).tolist()
-        ready_per_run = dat.groupby("Run")[ready_var].apply(lambda lst: 
-                                                              [value for value in lst if pd.notna(value)]).tolist()
             
             
     elif 'GetReady.OnsetTime' in dat.columns:
@@ -444,18 +427,17 @@ elif task == "nback":
             dat['Run'] = np.where(dat.index < row_run2_start, 1, 2)
             
             # getting onset times
-            ready_var = [col for col in dat.columns 
-                        if ("GetReady" in col) and (col.endswith(".OffsetTime"))]
+            ready_var = [col for col in dat.columns
+                         if ("GetReady" in col) and (col.endswith(".OffsetTime"))]
             
             ready_run1 = dat.loc[dat['Run'] == 1, ready_var[0]].iloc[0]
             prep_run1 = dat.loc[dat['Run'] == 1, ready_var[0]].dropna().iloc[-1]
             ready_run2 = dat.loc[dat['Run'] == 2, ready_var[1]].iloc[0]
             prep_run2 = dat.loc[dat['Run'] == 2, ready_var[1]].dropna().iloc[-1]
-            
-        
+
             # Save the values for preptime (main) and getready time (includes volume prep alt)
-            ready_per_run = [ready_run1,ready_run2]
-            prep_per_run = [prep_run1,prep_run2]
+            ready_per_run = [ready_run1, ready_run2]
+            prep_per_run = [prep_run1, prep_run2]
             
         else:
             ready_var = "GetReady.OnsetTime"
@@ -466,32 +448,30 @@ elif task == "nback":
                 dat['Run'] = np.where(dat.index < run_start[1], 1, 2)
             else:
                 dat['Run'] = np.where(dat.index >= run_start[0], 1, np.nan)
-            
-            
+
             # Save the values for preptime (main) and getready time (includes volume prep alt)
             # the eprime data has a multiple valunes in GetReady.RTTime, start of scanner is first value of list per run
             # after initial values the onset is the last value
             ready_per_run = [lst[0] for lst in (dat.groupby("Run")[ready_var]
-                                        .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
+                                                .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
             prep_per_run = [lst[-1] for lst in (dat.groupby("Run")[prep_var]
-                                        .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
+                                                .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
             
             dat = dat[~dat['Run'].isna()]
             
     # create subtrials
-    dat['SubTrial'] = dat.loc[~dat['Procedure[Block]'].str.startswith('TRSyncPROC')] \
-                       .groupby('Run') \
-                       .cumcount() + 1
+    dat['SubTrial'] = dat.loc[~dat['Procedure[Block]'].str.startswith('TRSyncPROC')].groupby('Run').cumcount() + 1
     
     # remove "Block" suffix in names to keep consistent
     if 'Fix.OnsetTime[Block]' in dat.columns:
         cols_to_rename = ['Running[Block]', 'Stim.ACC[Block]', 'Stim.CRESP[Block]', 'Stim.Duration[Block]',
-                  'Stim.DurationError[Block]', 'Stim.FinishTime[Block]', 'Stim.OnsetDelay[Block]',
-                  'Stim.OnsetTime[Block]', 'Stim.OnsetToOnsetTime[Block]', 'Stim.RESP[Block]',
-                  'Stim.RT[Block]', 'Stim.RTTime[Block]', 'Stim.StartTime[Block]', 'StimType[Block]',
-                  'Fix.Duration[Block]', 'Fix.DurationError[Block]', 'Fix.FinishTime[Block]',
-                  'Fix.OnsetDelay[Block]', 'Fix.OnsetTime[Block]', 'Fix.OnsetToOnsetTime[Block]',
-                  'Fix.StartTime[Block]']
+                          'Stim.DurationError[Block]', 'Stim.FinishTime[Block]', 'Stim.OnsetDelay[Block]',
+                          'Stim.OnsetTime[Block]', 'Stim.OnsetToOnsetTime[Block]', 'Stim.RESP[Block]',
+                          'Stim.RT[Block]', 'Stim.RTTime[Block]', 'Stim.StartTime[Block]', 'StimType[Block]',
+                          'Fix.Duration[Block]', 'Fix.DurationError[Block]', 'Fix.FinishTime[Block]',
+                          'Fix.OnsetDelay[Block]', 'Fix.OnsetTime[Block]', 'Fix.OnsetToOnsetTime[Block]',
+                          'Fix.StartTime[Block]'
+                          ]
 
         # Loop over the columns to be renamed and replace "Block" with an empty string
         for col in cols_to_rename:
@@ -514,42 +494,43 @@ elif task == "nback":
             dat['TriggerTime'] = np.tile(ready_per_run[0][r-1], len(dat))
             dat['TriggerTimeAlt'] = np.tile(prep_per_run[0][r-1], len(dat))
             
-            
         # before conversion, convert values to numeric to ensure not objects 
         df = dat
-        df_subset = convert_to_numeric(df)
+        df_subset = convert_to_numeric(dataframe=df)
         df_subset = df[df['Run'] == r]
         
         # keep column names for the output behavioral files, modify as needed
-        keep_cols = ["Subject","Run","SubTrial","Handedness","Block","BlockType","StimType",
-                     "TargetType","ConsecNonResp[Block]",
-                     "ConsecSameResp","ControlAcc","CorrectResponse",
-                     "Cue2Back.OnsetTime","Cue2Back.Duration","Cue2Back.FinishTime",
-                     "CueFix.OnsetTime","CueFix.Duration","CueFix.FinishTime","CueFix.RTTime",
-                     "CueTarget.OnsetTime","CueTarget.Duration","CueTarget.FinishTime",
-                     "Fix.OnsetTime","Fix.Duration","Fix.FinishTime",
-                     "Fix15sec.OnsetTime","Fix15sec.Duration",
-                     "Stim.OnsetTime","Stim.Duration","Stim.FinishTime",
-                     "Procedure[Block]","RunTrialNumber[Block]",
-                     "Stim.ACC","Stim.CRESP","Stim.RESP","Stim.RT",
-                     "Run3Block1","Run3Block2","Run3Block3","Run3Block4","Run3Block5",
-                     "Run3Block6","Run3Block7","Run3Block8",
-                     "Run4Block1","Run4Block2","Run4Block3","Run4Block4","Run4Block5",
-                     "Run4Block6","Run4Block7","Run4Block8",
-                     "TriggerTime","TriggerTimeAlt"
+        keep_cols = ["Subject", "Run", "SubTrial", "Handedness", "Block", "BlockType", "StimType",
+                     "TargetType", "ConsecNonResp[Block]",
+                     "ConsecSameResp", "ControlAcc", "CorrectResponse",
+                     "Cue2Back.OnsetTime", "Cue2Back.Duration", "Cue2Back.FinishTime",
+                     "CueFix.OnsetTime", "CueFix.Duration", "CueFix.FinishTime", "CueFix.RTTime",
+                     "CueTarget.OnsetTime", "CueTarget.Duration", "CueTarget.FinishTime",
+                     "Fix.OnsetTime", "Fix.Duration", "Fix.FinishTime",
+                     "Fix15sec.OnsetTime", "Fix15sec.Duration",
+                     "Stim.OnsetTime", "Stim.Duration", "Stim.FinishTime",
+                     "Procedure[Block]", "RunTrialNumber[Block]",
+                     "Stim.ACC", "Stim.CRESP", "Stim.RESP", "Stim.RT",
+                     "Run3Block1", "Run3Block2", "Run3Block3", "Run3Block4", "Run3Block5",
+                     "Run3Block6", "Run3Block7", "Run3Block8",
+                     "Run4Block1", "Run4Block2", "Run4Block3", "Run4Block4", "Run4Block5",
+                     "Run4Block6", "Run4Block7", "Run4Block8",
+                     "TriggerTime", "TriggerTimeAlt"
                      ]
         cols_to_keep = [col for col in keep_cols if col in df_subset.columns]
         df_subset = df_subset[cols_to_keep]
         
         # subtract Onset/Finish times + adjust duration to seconds
-        time_subtract = ["Cue2Back.OnsetTime","Cue2Back.FinishTime",
-        "CueFix.OnsetTime","CueFix.FinishTime",
-        "CueTarget.OnsetTime","CueTarget.FinishTime",
-        "Fix.OnsetTime","Fix.FinishTime","Fix15sec.OnsetTime",
-        "Stim.OnsetTime","Stim.FinishTime"]
+        time_subtract = ["Cue2Back.OnsetTime", "Cue2Back.FinishTime",
+                         "CueFix.OnsetTime", "CueFix.FinishTime",
+                         "CueTarget.OnsetTime", "CueTarget.FinishTime",
+                         "Fix.OnsetTime", "Fix.FinishTime", "Fix15sec.OnsetTime",
+                         "Stim.OnsetTime", "Stim.FinishTime"
+                         ]
         
-        duration_subtract = ["Cue2Back.Duration","CueFix.Duration","CueTarget.Duration",
-                             "Fix.Duration","Fix15sec.Duration","Stim.Duration"]
+        duration_subtract = ["Cue2Back.Duration", "CueFix.Duration", "CueTarget.Duration",
+                             "Fix.Duration", "Fix15sec.Duration", "Stim.Duration"
+                             ]
         
         # due to column differences for select cases, to avoid errors using try/except
         # adding 800ms to Trigger time as trigger time is when volume is collected not + 800ms duration to next volume
@@ -569,7 +550,7 @@ elif task == "nback":
         df_subset["DiffTriggerTimes"] = (df_subset["TriggerTimeAlt"]-(df_subset["TriggerTime"]))/1000
         
         # writeout .tsv per run
-        df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0{r}_events.tsv", sep = '\t', index = False)
+        df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0{r}_events.tsv", sep='\t', index=False)
         
         
     

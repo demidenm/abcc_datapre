@@ -1,107 +1,51 @@
 """
 Behavioral Plotting Script
 
-This Python script generates behavioral plots for research purposes. Some of the components used in this script, including group templates, plotting functions, CSS styles, and JavaScript scripts, have been adopted and, in some cases, tailored from the MRIQC project.
+This Python script generates behavioral plots for research purposes. Some components used in this script,
+including group templates, plotting functions, CSS styles, and JavaScript scripts, have been adopted and, in
+some cases, tailored from the MRIQC project.
 
-MRIQC is an open-source software project for quality control and analysis of MRI data, and the components used in this script were sourced from the MRIQC repository: https://github.com/nipreps/mriqc/tree/f360d1eb46909626c4ca9dbeb5514c3d8fab29e7/mriqc/reports
+MRIQC is an open-source software project for quality control and analysis of MRI data, and the components used in this
+script were sourced from the MRIQC repository:
+https://github.com/nipreps/mriqc/tree/f360d1eb46909626c4ca9dbeb5514c3d8fab29e7/mriqc/reports
 
-The adoption of these components has been done with proper attribution and adherence to their respective licenses and terms of use.
+The adoption of these components has been done with proper attribution and adherence to their respective licenses and
+terms of use.
 
 Author: Michael Demidenko
-
-Date: Current Date
+Date: October 2023
 """
 
-from . import group
+from . import (group, group_csv)
 from pathlib import Path
-import pandas as pd
-import numpy as np
-import json
-import glob
-import os
+import argparse
 
-print(os.getcwd())
+# Create ArgumentParser object
+parser = argparse.ArgumentParser(description="This script runs calculates subject specific information "
+                                             "and generates group csv that is used in creating the html report(s).")
 
-task = 'MID'
-folder_path = f"./baselineYear1Arm1_{task}"
-out_path = "./beh_html"
-html_desc = f"./scripts/templates/describe_report_{task}.txt"
 
-# Create an empty DataFrame with the desired columns
-columns = ['bids_name', 'subject_id', 'session_id', 'task_id', 'image_path']
-column_suffixes = ['mrt', 'acc', 'mrt_hit', 'mrt_mis',
-                   'cue_acc_lgrew', 'cue_acc_lgpun', 'cue_acc_neut',
-                   'cue_acc_smrew', 'cue_acc_smpun',
-                   'cue_mrt_lgrew', 'cue_mrt_lgpun', 'cue_mrt_neut',
-                   'cue_mrt_smrew', 'cue_mrt_smpun',
-                   'feedback_h-lgrew', 'feedback_m-lgrew', 'feedback_h-lgpun', 'feedback_m-lgpun',
-                   'feedback_h-neut', 'feedback_m-neut', 'feedback_h-smrew', 'feedback_m-smrew',
-                   'feedback_h-smpun', 'feedback_m-smpun']
-df = pd.DataFrame(columns=columns)
+parser.add_argument("-t", "--task_name", type=str, required=True,
+                    help="task name, e.g. MID, SST, nback")
+parser.add_argument("-i", "--in_dir", type=str, required=True,
+                    help="Input directory where subject specific .json & .png files are, "
+                         "e.g. ./baseline_sst")
+parser.add_argument("-d", "--task_desc", type=str, required=True,
+                    help="path to file contain html description for task, "
+                         "e.g. ./scripts/templates/describe_report_sst.txt ")
+parser.add_argument("-o", "--out_dir", type=str, required=True,
+                    help="output directory for aggregated .csv file")
 
-# List of JSON file paths
-json_files = glob.glob(f"{folder_path}/*task-{task}_beh-descr.json")
+args = parser.parse_args()
 
-# count # runs
-r1 = 0
-r2 = 0
-for file_path in json_files:
-    sub_id = file_path.split('_')[1].split('-')[1]
-    ses_id = file_path.split('_')[2].split('-')[1]
-    task_id = file_path.split('_')[3].split('-')[1]
-    basename = os.path.splitext(os.path.basename(file_path))[0]
-    image_path = f".{folder_path}/{basename}.png"
+# Assign values to variables
+task = args.task_name
+folder_path = args.in_dir
+html_desc = args.task_desc
+out_path = args.out_dir
 
-    with open(file_path, 'r') as f:
-        data = json.load(f)
-
-    for item in data:
-        if "Run 1" in json.dumps(item):
-            r1 += 1
-        if "Run 2" in json.dumps(item):
-            r2 += 1
-
-    runs = []
-    for run_name, run_data in data.items():
-        if run_name.startswith('Run '):
-            run_num = int(run_name[4:])
-            runs.append(run_name)
-    # Initialize a dictionary to store run-specific data
-    run_data_dict = {'bids_name': file_path,
-                     'subject_id': sub_id,
-                     'session_id': ses_id,
-                     'task_id': task_id,
-                     'image_path': image_path
-                     }
-
-    for run in runs:
-        # Extract the Mean RT and Overall Accuracy for the run
-        run_data = data[run]
-        mean_rt_run = run_data.get('Mean RT', np.nan)
-        accuracy_run = run_data.get('Overall Accuracy', np.nan)
-        mrt_hit_run = run_data.get('Mean RT by Hit/Miss', {}).get('1', np.nan)
-        mrt_miss_run = run_data.get('Mean RT by Hit/Miss', {}).get('0', np.nan)
-        acc_cond_run = run_data.get('Accuracy by Cue Condition', {})
-        mrt_cond_run = run_data.get('Mean RT by Cue Condition', {})
-        feedback_trials_run = run_data.get('Trials Per Feedback Condition', {})
-        # Update the dictionary with run-specific data
-        run_data_dict[f'mrt_{run.lower().replace(" ", "")}'] = mean_rt_run
-        run_data_dict[f'acc_{run.lower().replace(" ", "")}'] = accuracy_run
-        run_data_dict[f'mrt_hit-{run.lower().replace(" ", "")}'] = mrt_hit_run
-        run_data_dict[f'mrt_mis-{run.lower().replace(" ", "")}'] = mrt_miss_run
-        for cond, suffix in zip(['LgReward', 'LgPun', 'Triangle', 'SmallReward', 'SmallPun'], column_suffixes[4:]):
-            run_data_dict[f'{suffix}-{run.lower().replace(" ", "")}'] = acc_cond_run.get(cond, np.nan)
-        for cond, suffix in zip(['LgReward', 'LgPun', 'Triangle', 'SmallReward', 'SmallPun'], column_suffixes[9:]):
-            run_data_dict[f'{suffix}-{run.lower().replace(" ", "")}'] = mrt_cond_run.get(cond, np.nan)
-        for cond, suffix in zip(['You earn $5!', 'You did not earn $5!', 'You earn $0.20!', 'You did not earn $0.20!',
-                                 'Neutral Hit', 'Neutral Miss',
-                                 'You keep $5!', 'You lose $5!', 'You keep $0.20!', 'You lose $0.20!'],
-                                column_suffixes[14:]):
-            run_data_dict[f'{suffix}-{run.lower().replace(" ", "")}'] = feedback_trials_run.get(cond, 0)
-    # Append the dictionary to the DataFrame
-    df = pd.concat([df, pd.DataFrame([run_data_dict])], ignore_index=True)
-
-df.to_csv(f'{folder_path}/group_{task}.csv', index=False)
+# create task specific .csv file
+json_n, r1, r2 = group_csv.export_csv(task=task, folder_path=folder_path, out_path=out_path)
 
 items = {
     "MID": [
@@ -140,27 +84,50 @@ items = {
           "feedback_h-lgpun-run2", "feedback_m-lgpun-run2", ],
          'n - 1/0'),
     ],
+    "SST": [
+        (["Go Acc", "acc_go-run1", "acc_go-run2", ], 'Go %'),
+        (["Stop Acc", "acc_stop-run1", "acc_stop-run2"], 'Stop %'),
+        (["Go MRT", "mrt_go-run1", "mrt_go-run2", ], 'Go ms'),
+        (["Fail Stop MRT", "mrt_stopfail-run1", "mrt_stopfail-run2", ], 'Stop ms'),
+        (["SSRT", "ssrt-run1", "ssrt-run2", ], 'ms'),
+        (["SSD Min", "ssd_min-run1", "ssd_min-run2", ], "min ms"),
+        (["SSD Max", "ssd_max-run1", "ssd_max-run2"], "max ms"),
+
+    ],
     "nback": [
-        (["efc"], None),
-        (["fber"], None),
-        (["fwhm", "fwhm_x", "fwhm_y", "fwhm_z"], "mm"),
+        (["Block Acc",
+          "acc_all-run1", "acc_all-run2",
+          'acc_n0back-run1', 'acc_n0back-run2',
+          'acc_n2back-run1', 'acc_n2back-run2', ], 'Block %'),
+        (["Cue Acc" 
+          "acc_posface-run1", "acc_posface-run2",
+          "acc_neutface-run1", "acc_neutface-run2",
+          "acc_negface-run1", "acc_negface-run2",
+          "acc_place-run1", "acc_place-run2", ], 'Cue %'),
+        (["Block MRT",
+          "mrt_all-run1", "mrt_all-run2",
+          'mrt_n0back-run1', 'mrt_n0back-run2',
+          'mrt_n2back-run1', 'mrt_n2back-run2', ], 'Block ms'),
+        (["Cue MRT"
+          "mrt_posface-run1", "mrt_posface-run2",
+          "mrt_neutface-run1", "mrt_neutface-run2",
+          "mrt_negface-run1", "mrt_negface-run2",
+          "mrt_place-run1", "mrt_place-run2", ], 'Cue ms'),
+
     ],
 }
 
 with open(html_desc, "r", encoding="utf-8") as input_html:
     html_content = input_html.read()
 
-modality = [task]
-
-for mod in modality:
-    csv_path = Path(f'{folder_path}/group_{task}.csv')
-    out_html = f"{out_path}/group_{mod}.html"
-    group.gen_html(
-        csv_file=csv_path,
-        mod=mod,
-        n_subjects=len(json_files),
-        runs=[r1, r2],
-        description=html_content,
-        qc_items=items,
-        out_file=out_html
-    )
+csv_path = Path(f'{out_path}/group_{task}.csv')
+out_html = f"{out_path}/group_{task}.html"
+group.gen_html(
+    csv_file=csv_path,
+    mod=task,
+    n_subjects=json_n,
+    runs=[r1, r2],
+    description=html_content,
+    qc_items=items,
+    out_file=out_html
+)

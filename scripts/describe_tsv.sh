@@ -1,5 +1,31 @@
 #!/bin/bash -l
 
+# Script Description:
+# This Bash script is designed to automate the execution of a Python script for processing behavioral data.
+# It prompts the user to select a session and a task, creates output directories, and runs the Python script for
+# each subject listed in a text file. The script logs any errors that occur during the execution and provides a summary at the end.
+
+# Usage:
+# Run this script from the command line with necessary permissions. It assumes the presence of a Python module,
+# a directory structure, and input data.
+
+# Description of Steps:
+
+# 1. Load the Python module.
+# 2. Set variables for directory paths and the current date.
+# 3. Prompt the user to select a session and task.
+# 4. Create output directories based on user prompts.
+# 5. Check if a subject list file exists. If not, generate it from a log file.
+# 6. Prompt the user to confirm the selected session and task options.
+# 7. If confirmed, start processing data for each subject in the list.
+# 8. Create directories for output and log files if they do not exist.
+# 9. Run the Python script for each subject, capturing any error messages.
+# 10. Log error messages for troubleshooting and success messages for completed runs.
+# 11. Provide a summary at the end, including the number of errors.
+
+# Script Author: Michael Demidenko
+# Date: June 2023
+
 module load python
 
 dir=`pwd`

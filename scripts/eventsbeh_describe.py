@@ -1,3 +1,28 @@
+"""
+This Python script is designed for the analysis and visualization of behavioral data in the context of
+neuroimaging experiments. It provides several key functions and tasks, including:
+
+1. `convert_to_numeric(dataframe)`: A function for converting object columns in a Pandas DataFrame to numeric values.
+
+2. `map_condition_to_reward_category(condition)`: A function that maps specific experimental conditions to reward
+categories ('gain' for rewards, 'loss' for punishments, 'neutral' for a neutral condition).
+
+3. `calc_ssrt(dataframe, max_go_rt=2000)`: A function to calculate Stop Signal Reaction Time (SSRT) using an integration
+method with omission replacement.
+
+4. `calc_d_prime(dataframe, block_col, acc_col)`: A function to calculate n-back d-prime (D') for specified conditions
+in a DataFrame.
+
+The script uses the argparse library to parse command-line arguments for input and output directories,
+subject ID, session, and task type.
+
+The data processing and visualization tasks vary based on the task type (e.g., MID, SST, n-back). For each task type,
+the script generates data summaries and various plots, saving them as both PNG images and JSON files.
+
+Author: Michael Demidenko
+Date: August 2023
+"""
+
 import argparse
 import json
 from scipy.stats import norm
@@ -12,25 +37,20 @@ import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
 
-# test sub,ses,task
-#in_dir = '/Users/michaeldemidenko/Downloads'
-#out_dir = '/Users/michaeldemidenko/Downloads'
-#sub = 'AAAAA'
-#ses = 'baselineYear1Arm1'
-#task= 'SST'
 
-def convert_to_numeric(df):
+def convert_to_numeric(dataframe):
     """
     Convert all object columns in the pd dataframe to numeric values.
 
     """
-    for col in df.columns:
-        if df[col].dtype == 'object':
+    for col in dataframe.columns:
+        if dataframe[col].dtype == 'object':
             try:
-                df[col] = pd.to_numeric(df[col])
+                df[col] = pd.to_numeric(dataframe[col])
             except ValueError:
                 pass
     return df
+
 
 def map_condition_to_reward_category(condition):
     """
@@ -53,12 +73,12 @@ def map_condition_to_reward_category(condition):
         return np.nan
 
 
-def calc_ssrt(df, max_go_rt=2000):
+def calc_ssrt(dataframe, max_go_rt=2000):
     """
     Compute Stop Signal Reaction Time (SSRT) using the integration method with omission replacement.
         provided by Jaime Rios
     Args:
-        df (DataFrame): A pandas DataFrame containing trial data.
+        dataframe (DataFrame): A pandas DataFrame containing trial data.
         max_go_rt (int, optional): The maximum Go trial reaction time (default is 2000 milliseconds).
     Returns:
         float: The calculated SSRT.
@@ -70,9 +90,9 @@ def calc_ssrt(df, max_go_rt=2000):
         computed_ssrt = calc_ssrt(df)
     """
     # pull all go trials
-    go_trials = df[df[lab_trial_type].isin(['CorrectGo', 'IncorrectGo'])]
+    go_trials = dataframe[dataframe[lab_trial_type].isin(['CorrectGo', 'IncorrectGo'])]
     # pull all stop trials
-    stop_trials = df[df[lab_trial_type].isin(['CorrectStop', 'IncorrectStop'])]
+    stop_trials = dataframe[dataframe[lab_trial_type].isin(['CorrectStop', 'IncorrectStop'])]
 
     # omission replacement
     go_replacement_df = go_trials.where(go_trials[lab_go_rt] != 0, max_go_rt)
@@ -95,12 +115,13 @@ def calc_ssrt(df, max_go_rt=2000):
 
     return ssrt
 
-def calc_d_prime(df, block_col, acc_col):
+
+def calc_d_prime(dataframe, block_col, acc_col):
     """
     Calculate n-back d-prime (D') for specified conditions in a DataFrame.
 
     Args:
-        df (pandas.DataFrame): A DataFrame containing the data.
+        dataframe (pandas.DataFrame): A DataFrame containing the data.
         block_col (str): The column name for the block type (e.g., 'BlockType').
         acc_col (str): The column name for accuracy (e.g., 'Stim.ACC').
 
@@ -111,8 +132,8 @@ def calc_d_prime(df, block_col, acc_col):
         df = load_data()
         d_prime_values = calc_d_prime(df, 'BlockType', 'Stim.ACC')
     """
-    block_type = df[block_col]
-    accuracy = df[acc_col]
+    block_type = dataframe[block_col]
+    accuracy = dataframe[acc_col]
 
     # Filter the data for '2-Back' and '0-Back' conditions
     is_2back = block_type == '2-Back'
@@ -142,7 +163,8 @@ def calc_d_prime(df, block_col, acc_col):
 
 
 # Create ArgumentParser object
-parser = argparse.ArgumentParser(description="This script runs and converts the .txt events data to events.tsv for each MID run.")
+parser = argparse.ArgumentParser(description="This script runs and converts the .txt events data to "
+                                             "events.tsv for each MID run.")
 
 # Add required positional arguments
 parser.add_argument("-i", "--in_dir", type=str, required=True,
@@ -173,7 +195,7 @@ files = glob(f"{in_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0*_events.tsv", recu
 if task == "MID":
     # column names, specify
     trial_n = 'SubTrial'
-    probe_mrt = ['prbrt',"OverallRT"]
+    probe_mrt = ['prbrt', "OverallRT"]
     cue_type = 'Condition'
     feedback_type = 'Result'
     trial_accuracy = 'prbacc'
@@ -182,12 +204,10 @@ if task == "MID":
     # create empty variables to save values to
     mid_descr = {}
     mid_fig_combined, axes = plt.subplots(nrows=2, ncols=7, figsize=(30, 14))
-        
-    
+
     for i, file_name in enumerate(files):
         # Load the file into a DataFrame
-        df = pd.read_csv(file_name, sep ='\t')
-        
+        df = pd.read_csv(file_name, sep='\t')
         
         mrt = probe_mrt[1] if probe_mrt[1] in df.columns else probe_mrt[0]
             
@@ -200,18 +220,18 @@ if task == "MID":
         df.loc[(df['Result'] == 'No money at stake!') & (df[trial_accuracy] == 0), 'Result'] = 'Neutral Miss'
         
         # running accuracy not extracted into .tsv for MID from AHRB, calculate here.
-        #cumulative_hits = df[trial_accuracy].dropna().cumsum()
-        #cumulative_trials = pd.Series(range(1, len(df) + 1))
-        
-        
+        # cumulative_hits = df[trial_accuracy].dropna().cumsum()
+        # cumulative_trials = pd.Series(range(1, len(df) + 1))
+
         try:
             cumulative_hits = df[trial_accuracy].astype(int).cumsum()
             cumulative_trials = pd.Series(range(1, len(df) + 1))
             running_accuracy = cumulative_hits / cumulative_trials
         except (TypeError, ValueError):
             # scenrio adjusting for when trials are missing values and have '?' or 'nan' values
-            df = df.dropna(subset=['Cue.OnsetTime', 'Anticipation.OnsetTime', 'Anticipation.Duration', 'Feedback.OnsetTime'])
-            df = convert_to_numeric(df)
+            df = df.dropna(subset=['Cue.OnsetTime', 'Anticipation.OnsetTime', 'Anticipation.Duration',
+                                   'Feedback.OnsetTime'])
+            df = convert_to_numeric(dataframe=df)
             cumulative_hits = df[trial_accuracy].astype(int).cumsum()
             cumulative_trials = pd.Series(range(1, len(df) + 1))
             cumulative_hits = cumulative_hits.astype(float)
@@ -272,8 +292,7 @@ if task == "MID":
         # Create RT plot across trials
         RT_zero_na = df[mrt].value_counts(dropna=False).get(0, 0) + df[mrt].isna().sum()
         non_zero_df = df[df[mrt].notna() & (df[mrt] != 0)]
-        
-        
+
         # line plot of MRT by SubTrial
         rt_plot = non_zero_df.plot(x=trial_n, y=mrt, ax=axes[i, 3])
         axes[i, 3].set_ylim([50, 650])
@@ -293,16 +312,16 @@ if task == "MID":
         
         # Create feedback counts
         # create a list of conditions in the desired order
-        feedback_order = ['You earn $5!','You did not earn $5!','You earn $0.20!','You did not earn $0.20!',
+        feedback_order = ['You earn $5!', 'You did not earn $5!', 'You earn $0.20!', 'You did not earn $0.20!',
                           'Neutral Hit', 'Neutral Miss',
-                          'You keep $5!', 'You lose $5!','You lose $0.20!','You keep $0.20!'
-                         ]
-        feedback_ord_abv = ['Earn $5','Didnt earn $5','Earn $0.20','Didnt earn $0.20',
-                          'Neutral Hit', 'Neutral Miss',
-                          'Keep $5', 'Lose $5','Lose $0.20','Keep $0.20']
+                          'You keep $5!', 'You lose $5!', 'You lose $0.20!', 'You keep $0.20!'
+                          ]
+        feedback_ord_abv = ['Earn $5', 'Didnt earn $5', 'Earn $0.20', 'Didnt earn $0.20',
+                            'Keep $5', 'Lose $5', 'Lose $0.20', 'Keep $0.20'
+                            ]
                 
-        # create a list of values corresponding to the condition order
-        feedback_values = [counts_per_result.get(c,0) for c in feedback_order]
+        # create a list of values corresponding to the condition order, if NA set as 0
+        feedback_values = [counts_per_result.get(c, 0) for c in feedback_order]
         
         # create bar plot of counts_per_result with ordered conditions
         result_group = axes[i, 5].bar(feedback_order, feedback_values)
@@ -362,7 +381,7 @@ elif task == "SST":
     
     for i, file_name in enumerate(files):
         # Load the file into a DataFrame
-        df = pd.read_csv(file_name, sep ='\t')
+        df = pd.read_csv(file_name, sep='\t')
         
         # n trial types
         trialtype_count = {k: v for k, v in df[lab_trial_type].value_counts().items() 
@@ -384,7 +403,7 @@ elif task == "SST":
         ssd_dict = {'min': min_value, 'max': max_value, 'mean': mean_value}
         
         # calculate ssrt
-        ssrt_est = calc_ssrt(df)
+        ssrt_est = calc_ssrt(dataframe=df)
 
         # Create a dictionary to store the calculated values for this run
         data = {
@@ -429,7 +448,8 @@ elif task == "SST":
         
         axes[i, 1].set_ylim([0, 1250])
         axes[i, 1].axhline(y=ssrt_est, color='red', linestyle='--', label='SSRT')
-        axes[i, 1].set_title(f'Run 0{i+1} \n RTs Across Trial Types \n Go (n:{go_n}), SSD (n:{ssd_n}), StopSig (n:{stop_n}), SSRT: red')
+        axes[i, 1].set_title(f'Run 0{i+1} \n RTs Across Trial Types \n Go (n:{go_n}), SSD (n:{ssd_n}), '
+                             f'StopSig (n:{stop_n}), SSRT: red')
         axes[i, 1].set_xlabel('')
         axes[i, 1].set_xticklabels(['Go RT', 'Stop Sig Delay RT', 'Stop Signal Fail RT'])
         axes[i, 1].set_ylabel('RT (ms)')
@@ -446,18 +466,19 @@ elif task == "SST":
         
         # Plot RT distributions across Go/Stop trials
         df['Go_or_stop'] = df['TrialCode'].map({'CorrectGo': 'GoTrial', 'IncorrectGo': 'GoTrial',
-                                        'CorrectStop': 'StopTrial', 'IncorrectStop': 'StopTrial'})
+                                                'CorrectStop': 'StopTrial', 'IncorrectStop': 'StopTrial'})
         
         go_data = df.loc[df['Go_or_stop'] == 'GoTrial', 'Go.Duration']
         ssd_data = df.loc[df['Go_or_stop'] == 'StopTrial', 'SSDDur']
         stop_signal_data = df.loc[df['Go_or_stop'] == 'StopTrial', 'StopSignal.Duration']
         
         # Histogram for SSDDur
-        n2, bins2, patches2 = axes[i,3].hist(x=ssd_data, bins=50, color='#1f77b4', alpha=0.7, rwidth=0.85, label='SSDDur')
+        n2, bins2, patches2 = axes[i, 3].hist(x=ssd_data, bins=50, color='#1f77b4',
+                                              alpha=0.7, rwidth=0.85, label='SSDDur')
         axes[i, 3].bar(bins2[:-1], n2, width=10, align='edge', color='#1f77b4')
         axes[i, 3].set_xlabel('Stop Signal Delay Duration (ms)')
         axes[i, 3].set_ylabel('Frequency')
-        axes[i, 3].set_ylim([0,30])
+        axes[i, 3].set_ylim([0, 30])
         axes[i, 3].set_title(f'Run 0{i+1} \n Stop Signal Delay Durations \n (SSD n:{ssd_data.count()})')
         
         # Histogram for StopSignal.Duration
@@ -470,7 +491,6 @@ elif task == "SST":
         axes[i, 4].set_ylim([0, 1])  # Assuming accuracy is a value between 0 and 1
         axes[i, 4].set_title(f'Run 0{i+1} \n Mean Accuracies \n (Go: {go_acc:.2f}, Stop: {stopsig_acc:.2f})')
 
-        
         # making tight layout and then save out png + writeout json
         sst_fig_combined.suptitle(f"Subject: {sub} Session: {ses}", fontweight='bold', fontsize=16, x=.5, y=.99)
         sst_fig_combined.tight_layout()
@@ -493,7 +513,7 @@ elif task == "nback":
 
     for i, file_name in enumerate(files):
         # Load the file into a DataFrame
-        df = pd.read_csv(file_name, sep ='\t')
+        df = pd.read_csv(file_name, sep='\t')
         
         # counts of types
         blocktype_count = df.groupby(lab_block).size().to_dict()
@@ -512,8 +532,8 @@ elif task == "nback":
         targettype_rt = df.groupby(lab_target)[lab_stim_rt].mean().to_dict()
         avg_rt = round(float(df[lab_stim_rt].mean()), 2)
         
-        #d-prime calc
-        dprime = calc_d_prime(df = df, block_col=lab_block, acc_col=lab_stim_acc)
+        # d-prime calc
+        dprime = calc_d_prime(dataframe=df, block_col=lab_block, acc_col=lab_stim_acc)
 
         # Create a dictionary to store the calculated values for this run
         data = {
@@ -528,13 +548,12 @@ elif task == "nback":
             'Target Mean RT': targettype_rt,
             'Overall Accuracy': avg_acc,
             'Overall Mean RT': avg_rt,
-            'D-prime':dprime
+            'D-prime': dprime
         }
     
         # Add the data for this run to the dictionary of all data
         nback_descr[f'Run {i+1}'] = data
-        
-        
+
         # Plot accuracy across trials  for nback
         x_axis_acc = list(blocktype_acc.keys()) + list(stimtype_acc.keys()) + list(targettype_acc.keys())
         y_axis_acc = list(blocktype_acc.values()) + list(stimtype_acc.values()) + list(targettype_acc.values())
@@ -563,7 +582,7 @@ elif task == "nback":
         # plot trialwise data; pivot the data to have condition types as columns and trials as rows
         rt_by_condition = df.groupby([lab_block, lab_trial_n])[lab_stim_rt].mean().reset_index()
         rt_pivot = rt_by_condition.pivot(index=lab_trial_n, columns=lab_block, values=lab_stim_rt)
-        by_type_rt_plt = rt_pivot.plot(ax=axes[i,2], linestyle='-')
+        by_type_rt_plt = rt_pivot.plot(ax=axes[i, 2], linestyle='-')
         axes[i, 2].set_ylabel('RT (ms)')
         axes[i, 2].set_xlabel('Trial')
         axes[i, 2].set_title(f'Run 0{i+1} \n RT Across Trials for Block Type')
