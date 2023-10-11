@@ -17,14 +17,12 @@
 report</title>
 </head>
 <body>
-    <h1>Task Summary: group {{ modality }}
-report</h1>
-<h2>Summary</h2>
-<ul class="simple">
+<h1><font color="#3875FF">ABCD Study®: Group Behavior Report for {{ modality }} </font></h1>
+<h2>Simple Summary</h2>
 <li>Date and time: {{ timestamp }}.</li>
 <li>Total Subjects : {{ subjects }}.</li>
 <li>Run Subjects : {{ runs }}.</li>
-<h2>Summary</h2>
+<h2>Report Details</h2>
 {{ summary_task }}
 <br>
 <br>
@@ -68,7 +66,7 @@ report</h1>
                 xName: 'iqm',
                 yName: 'value',
                 selector: "#chart-group" + group,
-                chartSize: { height: 300, width: 100 + 60 * nIQMs },
+                chartSize: { height: 500, width: 500 + 60 * nIQMs },
                 constrainExtremes: false,
                 modality: '{{ modality }}'
             });
@@ -99,10 +97,11 @@ report</h1>
             chart1.renderBoxPlot();
             chart1.boxPlots.show({
                 showWhiskers: true,
+                showMean: false,
                 showOutliers: false,
-                boxWidth: 15,
-                lineWidth: 15,
-                padding: -5,
+                boxWidth: 10,
+                lineWidth: 10,
+                padding: -20,
                 colors: ['#555']
             });
         }

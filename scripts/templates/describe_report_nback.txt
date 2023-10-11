@@ -1,0 +1,112 @@
+<p style="font-family: Helvetica; font-size: 16px;">
+  <h2>Purpose and Goal of the Report</h2>
+  This report provides a summary of the e-prime behavioral data for the Emotional Nback (NBack) task conducted as part of the ABCD study.
+    <h3>Purpose</h3>
+    <p>The report serves the purpose of aggregating and summarizing subject-specific data extracted from JSON files,
+    which are generated from e-prime summaries. This data aggregation is essential for drawing inferences about key
+    behavioral metrics in fMRI tasks, such as accuracy, mean response times, and condition types.</p>
+    <h3>Key Objectives</h3>
+    <ol>
+        <li><strong>Data Extraction:</strong> The report extracts subject-specific data from JSON files derived
+        from e-prime summaries.</li>
+        <li><strong>Data Aggregation:</strong> It aggregates this data across various variables into
+        a <code>group_[task].csv</code> file.</li>
+        <li><strong>Interactive Plots:</strong> Utilizing the data from the CSV file, the report generates
+        interactive plots displaying the histograms and distributions of data points.</li>
+        <li><strong>Hovering Information:</strong> When hovering over these figures,
+        users can access additional information:
+            <ul>
+                <li>Boxplot: Displays statistics such as the maximum, 75th percentile, median, 25th percentile,
+                and minimum values for the respective variable.</li>
+                <li>Data Points: Provides subject-specific labels (file sources)
+                and raw values.</li>
+            </ul>
+        </li>
+        <li><strong>Subject-Specific Figures:</strong> Clicking on a data point opens subject-specific
+        figures in the same window. Right-clicking on a data point opens subject-specific figures in a new tab,
+        ensuring that the group plots are not reset.</li>
+    </ol>
+    <h3>Utility of the Report</h3>
+    <p>The report offers a powerful tool for researchers and analysts. It helps to identify anomalies or outliers
+    in the data and gain insights into the distribution of data points, enabling informed decisions about exclusions
+    consistent with the the aggregated and subject specific data.
+    The generated <code>group_[task].csv</code> file can be used in various statistical
+    programs like SPSS, R, Python, JASP, or other preferred tools for data analysis. Subject-specific information
+    can be incorporated into analyses and manuscript reports. Additionally, after exclusions, subjects can be organized
+    into a new folder containing a subset of JSON and PNG files, facilitating the regeneration of the report as needed.
+    </p>
+  <br>
+  <h2>Task Description:</h2>
+  The Emotional N-back (EN-back) task, as described by Chaarani et al. <a href="https://doi.org/10.1038/s41593-021-00867-9">(2021)</a> and
+  Casey et al. <a href="https://doi.org/10.1016/j.dcn.2018.03.001">(2018)</a>, involves engaging memory and
+  emotion regulation processes. The task includes high (2-back) and low (0-back) working memory loads and uses two categories of stimuli:
+  faces and places. Within the faces category, there are positive, neutral, and negative faces. The most spatially reproducible contrast
+  in this block design is the faces versus places contrast. The primary behavioral variable of interest is 'D-prime' (D').
+  <br>
+  Participants were presented with a series of images during the EN-back task, as depicted in Figure 7 of Casey et al. They were
+  required to indicate whether each stimulus was a match or not. The task consisted of two runs, each comprising 80 trials (160 in total):
+  40 trials of 0-back and 40 trials of 2-back. Each run included 20 positive faces, 20 neutral faces, 20 negative faces, and 20 places
+  stimuli types, or 20 lures, 44 non-lures, and 16 targets.
+  <br>
+  <h3>D-prime:</h3>
+  <br>
+  D-prime is calculated separately for the 0-back and 2-back conditions. The calculation involves determining the percentage accuracy
+  (or 'hit') as the mean of the Stim.ACC variable from the E-prime files for each condition. The 'fail' (or 'miss') is calculated as 1
+  minus the hit accuracy percentage. Both values are then z-transformed. D-prime is derived as the difference between the hit and miss
+  values for the 0-back and 2-back conditions.
+  <br>
+  <h2>Task Summaries:</h2>
+  <br>
+  The group- and individual-level summaries are based on the behavioral data extracted from the *_events.tsv files. This data is obtained
+  using a script that extracts relevant columns from the EventsRelatedInformation.[txt/csv] (EPI) files.
+  <br>
+  <h3>Group Level:</h3>
+  The group-level summaries are derived from the curated individual JSON files. The main figure presents information for Run 01 and Run 01.
+  The figures, from left-to-right and top-to-bottom, include:
+  <ol>
+    <li>Figure 1: Boxplot and distribution of accuracy (%) for each overall and block type (0-back and 2-back) across subjects for Run 01 and Run 02</li>
+    <li>Figure 2: Boxplot and distribution of accuracy (%) for each cue type (positive, negative, neutral face, and places) across subjects for Run 01 and Run 02</li>
+    <li>Figure 3: Boxplot and distribution of mean response time (MRT, ms) for overall and each block type (0-back and 2-back) across subjects for Run 01 and Run 02</li>
+    <li>Figure 4: Boxplot and distribution of MRT (ms) for each cue type (positive, negative, neutral face, and places) across subjects for Run 01 and Run 02</li>
+    <li>Figure 5: Boxplot and distribution of calculated D-prime values for each block type (0-back and 2-back)</li>
+  </ol>
+  Conditions:
+  <br>
+  <ol>
+    <li>Cues: lgrew = Large Reward ($5), lgpun = Large Punishment ($5), neut = Neutral/Triangle (no money at stake),
+        smrew = Small Reward ($0.20), smpun = Small Punishment ($0.20)</li>
+    <li>Feedback: h-lgrew = Earn $5, m-lgrew = Don't earn $5, h-lgpun = Don't lose $5, m-lgpun = Lose $5,
+    h-neut = Hit - No money at stake, m-neut = Miss - No money at stake, h-smrew = Earn $0.20, m-smrew = Don't Earn $0.20,
+    h-smpun = Don't lose $0.20, m-smpun = Lose $0.20</li>
+  </ol>
+  Conditions:
+  <br>
+  <ol>
+    <li><strong>Blocks</strong>: n0back = 0-Back, n2back = 2-Back</li>
+    <li><strong>Cue Types</strong>: postface = Positive Face, neutface = Neutral Face,
+        negface = Negative Face, place = Places</li>
+  </ol>
+
+These values include all subjects who did not fail the EPI to *_events.tsv conversion. However, it is important to exclude subjects based on
+the provided e-prime and fMRI QC flags in the data releases, as subjects who failed the DAIRC behavioral QC may still be included.
+<br>
+<h3>Individual Level:</h3>
+Hovering and opening individual subjects figures in a new window/tap plots data for Run 01 and Run 02.
+If a subject does not have data for a run, an empty row of figures will be displayed. For each run, there are four figures:
+
+  <ol>
+    <li>Figure 1: Bar plot of accuracy (percentage) across all stimulus types (blocks, stimuli, and targets). The dashed red line represents the average accuracy across all types.</li>
+    <li>Figure 2: Bar plot of mean response time (ms) across all stimulus types (blocks, stimuli, and targets). The dashed red line represents the average response time across all types.</li>
+    <li>Figure 3: Line graph showing the trial-wise response times (ms) for the 0-back and 2-back conditions.</li>
+    <li>Figure 4: Bar plot of the D' values for each condition (0-back and 2-back).</li>
+  </ol>
+Each individual summary includes an associated sidecar file containing accuracy and mean response time data for blocks, stimuli, and targets,
+as well as overall accuracy, mean response time, and D-prime values for the 0-back and 2-back conditions.
+<br>
+<br>
+<hr><u>Open Code:</u></hr>
+    The data used to generate this HTML report, including the steps leading up to it (such as converting e-prime data
+    into *_events.tsv files and generating behavioral description JSONs/PNGs), can be accessed from the GitHub repository:
+    <a href="https://github.com/demidenm/abcc_datapre">Git: demidenm/abcc_datapre</a>.
+<br>
+</p>
