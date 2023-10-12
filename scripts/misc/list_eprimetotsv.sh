@@ -63,7 +63,7 @@ cat ${subs} | while read line ; do
 	
 	cp $line $tmp
 	# run python script and save error for troubleshooting 
-	error_msg=$(python ./eprimetotsv.py -i ${tmp} -o ${out} -s ${sub} -e ${ses} -r ${run} -t ${task} 2>&1 | tr -d '\n')
+	error_msg=$(python ../eprimetotsv.py -i ${tmp} -o ${out} -s ${sub} -e ${ses} -r ${run} -t ${task} 2>&1 | tr -d '\n')
     	if [[ ! -z "${error_msg}" ]]; then
         	echo -e "${sub}\t${ses}\t${task}\t${run}\t${curr_date}\t${error_msg}" >> ${err_log}
     	else
