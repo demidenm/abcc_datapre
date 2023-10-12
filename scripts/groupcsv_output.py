@@ -25,7 +25,7 @@ Returns:
         - The count of "Run 1" occurrences.
         - The count of "Run 2" occurrences.
 
-The returned values are used in summaries for the generate_html.py
+The returned values are used in summaries for the run_htmlreport.py
 Author: Michael Demidenko
 Date: October 2023
 """

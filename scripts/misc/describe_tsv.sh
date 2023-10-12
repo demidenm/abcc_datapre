@@ -86,7 +86,7 @@ cat ${sub_list} | while read line ; do
 	echo "     Starting $sub [${c}]"
 	
 	# run python script and save error for troubleshooting 
-	error_msg=$(python ./abcc_beh_describe.py -i ${in_dir} -o ${out} -s ${sub} -e ${ses} -t ${task} 2>&1 | tr -d '\n')
+	error_msg=$(python ./eventsbeh_desribe.py -i ${in_dir} -o ${out} -s ${sub} -e ${ses} -t ${task} 2>&1 | tr -d '\n')
     	if [[ ! -z "${error_msg}" ]]; then
         	echo -e "${sub}\t${ses}\t${task}\t${curr_date}\t${error_msg}" >> ${err_log}
     	else

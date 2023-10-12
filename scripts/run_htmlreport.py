@@ -16,7 +16,7 @@ Author: Michael Demidenko
 Date: October 2023
 """
 
-from . import (group, group_csv)
+from . import (group_html, groupcsv_output)
 from pathlib import Path
 import argparse
 
@@ -45,7 +45,7 @@ html_desc = args.task_desc
 out_path = args.out_dir
 
 # create task specific .csv file
-json_n, r1, r2 = group_csv.export_csv(task=task, folder_path=folder_path, out_path=out_path)
+json_n, r1, r2 = groupcsv_output.export_csv(task=task, folder_path=folder_path, out_path=out_path)
 
 items = {
     "MID": [
@@ -117,7 +117,7 @@ with open(html_desc, "r", encoding="utf-8") as input_html:
 
 csv_path = Path(f'{out_path}/group_{task}.csv')
 out_html = f"{out_path}/group_{task}.html"
-group.gen_html(
+group_html.gen_html(
     csv_file=csv_path,
     mod=task,
     n_subjects=json_n,

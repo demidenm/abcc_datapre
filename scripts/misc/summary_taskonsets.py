@@ -3,18 +3,12 @@ import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Set the directory where the files are located
-#in_dir = '/Users/michaeldemidenko/Downloads'
-#out_dir = '/Users/michaeldemidenko/Downloads'
-#task = 'nback'
-
-
 # Create ArgumentParser object
 parser = argparse.ArgumentParser(description="Checks initial onset values and DiffTriggerTimes in events.tsvs")
 
 # Add required positional arguments
 parser.add_argument("-i", "--in_dir", type=str, required=True,
-                    help="Input directory path where the events file is within */func/")
+                    help="Input directory path where the events files are exported")
 parser.add_argument("-o", "--out_dir", type=str, required=True,
                     help="Output directory path where the results should go")
 parser.add_argument("-t", "--task", type=str, required=True,
