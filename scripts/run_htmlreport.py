@@ -44,9 +44,13 @@ folder_path = args.in_dir
 html_desc = args.task_desc
 out_path = args.out_dir
 
-# create task specific .csv file
+# create task specific .csv file. export_csv returns the length of json files found (e.g., subjects in folder)
+# and the running tally of runs within those json numbers. Thus json_n => r1 and/or r2
+
 json_n, r1, r2 = groupcsv_output.export_csv(task=task, folder_path=folder_path, out_path=out_path)
 
+# Items are the column names that are generated in the groupcsv_output.py script. Note, group.html template
+# plots the y-axis label (e.g. horizontal label) as the characters preceding the first (if more than 2 and second) '_'.
 items = {
     "MID": [
         (["Acc", "acc_run1", "acc_run2"], '%'),
@@ -115,6 +119,7 @@ items = {
 with open(html_desc, "r", encoding="utf-8") as input_html:
     html_content = input_html.read()
 
+# specify the path to the group_{task}.csv file and where the html report should go.
 csv_path = Path(f'{out_path}/group_{task}.csv')
 out_html = f"{out_path}/group_{task}.html"
 group_html.gen_html(
