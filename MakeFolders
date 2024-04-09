@@ -1,0 +1,23 @@
+#!/bin/bash
+
+echo -e "Enter the folder path to create events_to_tsv and tsv_to_html content (e.g., ../behavioral_data):"
+read folder_path
+
+if [ ! -d "$folder_path" ]; then
+	echo "Creating: ${folder_path}"
+	mkdir -p ${folder_path}
+fi
+
+# create folders
+curr_dir=$(pwd)
+mkdir -p ${folder_path}/events_to_tsv/{files,logs,qc_out,tmp,scripts}
+mkdir -p ${folder_path}/tsv_to_html/{beh_html,logs,scripts}
+
+# Move files/folders for tsv_to_html
+cp -r ${curr_dir}/scripts/embed_resources ${curr_dir}/scripts/templates ${folder_path}/tsv_to_html/scripts/
+cp ${curr_dir}/scripts/misc/loop_describeevents.sh ${curr_dir}/scripts/eventsbeh_describe.py ${curr_dir}/scripts/groupcsv_output.py ${curr_dir}/scripts/group_html.py ${curr_dir}/scripts/run_htmlreport.py ${folder_path}/tsv_to_html/scripts/
+
+# Move files/folders for events_tsv
+cp ${curr_dir}/scripts/eprimetotsv.py ${curr_dir}/scripts/task_columns.json ${folder_path}/events_to_tsv/scripts/
+cp ${curr_dir}/scripts/misc/summary_taskonsets.py ${curr_dir}/scripts/misc/list_eprimetotsv.sh ${curr_dir}/scripts/misc/subj-ids_eprimetotsv.sh ${folder_path}/events_to_tsv/scripts/
+
