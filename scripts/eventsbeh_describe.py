@@ -62,7 +62,6 @@ def map_condition_to_reward_category(condition):
         'loss' for 'LgPun' or 'SmallPun', 'neutral' for 'Triangle'), or np.nan if the condition
         is not recognized.
     """
-
     if condition in ['LgReward', 'SmallReward']:
         return 'gain'
     elif condition in ['LgPun', 'SmallPun']:
@@ -371,7 +370,9 @@ elif task == "SST":
     lab_go_rt = 'Go.RT'
     lab_go_accuray = 'Go.ACC'
     lab_ssd_rt = 'SSD.RT'
-    lab_stopsig_rt = 'StopSignal.RT'
+    # Per Patrick Bissett, in e-prime implementation, 'StopSignal.RT' is not correct
+    # StopSigna.RT is missing SSDDur time, correct StopSig_RT = StopSignal.RT + SSDDur
+    lab_stopsig_rt = 'StopSig_RT'
     lab_stopsig_accuacy = 'StopSignal.ACC'
     lab_ssd_duration = 'SSDDur'
 
@@ -605,5 +606,4 @@ elif task == "nback":
         nback_fig_combined.tight_layout()
         nback_fig_combined.savefig(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_beh-descr.png")
         with open(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_beh-descr.json", 'w') as f:
-            json.dump(nback_descr, f, indent=4)  
-        
+            json.dump(nback_descr, f, indent=4)

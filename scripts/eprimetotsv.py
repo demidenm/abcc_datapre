@@ -20,6 +20,8 @@ Date: June 2023
 """
 
 import argparse
+import os
+import json
 import pandas as pd
 import numpy as np
 from collections import OrderedDict
@@ -134,6 +136,12 @@ ses = args.ses
 run = args.run
 task = args.task
 
+# get json file with column names for each task and save it to task columns to use later
+py_script_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(py_script_dir, 'task_columns.json')
+with open(json_path, 'r') as f:
+    task_details = json.load(f)
+task_columns = task_details.get(task, None)
 
 # Setting up the file path
 filepath = f"{in_dir}/sub-{sub}_ses-{ses}_task-{task}_run-{run}_bold_EventRelatedInformation.txt"
@@ -222,23 +230,15 @@ if task == "MID":
         df_subset = df[df['Run'] == r]
 
         # keep column names for the output behavioral files, modify as needed
-        keep_cols = ["Subject", "Handedness", "Run", "SubTrial", "Condition",
-                     "Cue.OnsetTime", "Cue.Duration",
-                     "Anticipation.Duration", "Anticipation.OnsetTime",
-                     "Probe.Duration", "Probe.OnsetTime", "Probe.RESP",
-                     "Result", "prbacc", "prbrt", "OverallRT", "meanrt",
-                     "moneyamt", "ResponseCheck",
-                     "Feedback.OnsetTime", "FeedbackDuration",
-                     "SessionDate", "TriggerTime", "TriggerTimeAlt"]
+        keep_cols = task_columns["keep_cols"]
         
         cols_to_keep = [col for col in keep_cols if col in df_subset.columns]
         df_subset = df_subset[cols_to_keep]
 
         # Converting ms to seconds; ONLY [onset times] subtract trigger time
-        time_subtract = ["Cue.OnsetTime", "Anticipation.OnsetTime", "Probe.OnsetTime", "Feedback.OnsetTime"]
+        time_subtract = task_columns["time_subtract"]
         
-        duration_subtract = ["Cue.Duration", "Anticipation.Duration", "Probe.Duration",
-                             "FeedbackDuration"] # leaving RT in ms
+        duration_subtract = task_columns["duration_subtract"] # leaving RT in ms
         
         for col_time in time_subtract:
             df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
@@ -354,31 +354,16 @@ elif task == "SST":
         df_subset = df[df['Run'] == r]
 
         # keep column names for the output behavioral files, modify as needed
-        keep_cols = ["Subject", "Handedness", "Trials", "Procedure[SubTrial]", "TrialCode",
-                     "BeginFix.OnsetTime", "BeginFix.Duration", "CorrectAnswer",
-                     "EndFix.OffsetTime", "EndFix.Duration",
-                     "Fix.OnsetTime", "Fix.FinishTime", "Fix.Duration",
-                     "Fix.RESP", "Fix.RT",
-                     "Go.OnsetTime", "Go.Duration", "Go.FinishTime", "Go.ACC", "Go.CRESP",
-                     "Go.StartTime", "Go.RTTime", "Go.RT", "Jitter",
-                     "SSD.CRESP", "SSD.OnsetDelay", "SSD.OnsetTime",
-                     "Stimulus", "SSD.RT", "SSD.RTTime", "SSDDur",
-                     "Stop_nback", "StopDur", "StopSignal.ACC", "StopSignal.OnsetTime", "StopSignal.Duration",
-                     "StopSignal.RESP", "StopSignal.RT", "StopSignal.RTTime", "StopSignal.DurationError",
-                     "TriggerTime", "TriggerTimeAlt"
-                     ]
+        keep_cols = task_columns["keep_cols"]
 
         cols_to_keep = [col for col in keep_cols if col in df_subset.columns]
         df_subset = df_subset[cols_to_keep]
         
         # subtract Onset/Finish times + adjust duration to seconds
-        time_subtract = ["BeginFix.OnsetTime", "Fix.OnsetTime", "Fix.FinishTime",
-                         "Go.OnsetTime", "Go.FinishTime", "Go.StartTime", "Go.RTTime",
-                         "SSD.OnsetTime", "StopSignal.OnsetTime", "StopSignal.RTTime"]
-        
-        duration_subtract = ["BeginFix.Duration", "Fix.Duration", "Go.Duration", "Jitter"]
-        # leaving SSDDur and StopSignal.Duration in ms ****
+        time_subtract = task_columns["time_subtract"]
+        duration_subtract = task_columns["duration_subtract"]
 
+        # leaving SSDDur and StopSignal.Duration in ms ****
         for col_time in time_subtract:
             df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
             
@@ -387,7 +372,11 @@ elif task == "SST":
 
         # create diff between scanner start and task start
         df_subset["DiffTriggerTimes"] = (df_subset["TriggerTimeAlt"]-df_subset["TriggerTime"])/1000
-        
+
+        # Per Patrick Bissett, in e-prime implementation, StopSignal.RT is not correct ver for StopSignal Response Time
+        # StopSigna.RT is missing SSDDur time, correct StopSig_RT = StopSignal.RT + SSDDur
+        df_subset["StopSig_RT"] = df_subset["StopSignal.RT"] + df_subset["SSDDur"]
+
         # writeout .tsv per run
         df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0{r}_events.tsv", sep='\t', index=False)
         
@@ -415,8 +404,7 @@ elif task == "nback":
                                                           [value for value in lst if pd.notna(value)]).tolist()
         ready_per_run = dat.groupby("Run")[ready_var].apply(lambda lst:
                                                             [value for value in lst if pd.notna(value)]).tolist()
-            
-            
+
     elif 'GetReady.OnsetTime' in dat.columns:
         #GE columns
         if "Waiting4Scanner.Cycle" in dat.columns:
@@ -498,39 +486,15 @@ elif task == "nback":
         df = dat
         df_subset = convert_to_numeric(dataframe=df)
         df_subset = df[df['Run'] == r]
-        
+
         # keep column names for the output behavioral files, modify as needed
-        keep_cols = ["Subject", "Run", "SubTrial", "Handedness", "Block", "BlockType", "StimType",
-                     "TargetType", "ConsecNonResp[Block]",
-                     "ConsecSameResp", "ControlAcc", "CorrectResponse",
-                     "Cue2Back.OnsetTime", "Cue2Back.Duration", "Cue2Back.FinishTime",
-                     "CueFix.OnsetTime", "CueFix.Duration", "CueFix.FinishTime", "CueFix.RTTime",
-                     "CueTarget.OnsetTime", "CueTarget.Duration", "CueTarget.FinishTime",
-                     "Fix.OnsetTime", "Fix.Duration", "Fix.FinishTime",
-                     "Fix15sec.OnsetTime", "Fix15sec.Duration",
-                     "Stim.OnsetTime", "Stim.Duration", "Stim.FinishTime",
-                     "Procedure[Block]", "RunTrialNumber[Block]",
-                     "Stim.ACC", "Stim.CRESP", "Stim.RESP", "Stim.RT",
-                     "Run3Block1", "Run3Block2", "Run3Block3", "Run3Block4", "Run3Block5",
-                     "Run3Block6", "Run3Block7", "Run3Block8",
-                     "Run4Block1", "Run4Block2", "Run4Block3", "Run4Block4", "Run4Block5",
-                     "Run4Block6", "Run4Block7", "Run4Block8",
-                     "TriggerTime", "TriggerTimeAlt"
-                     ]
+        keep_cols = task_columns["keep_cols"]
         cols_to_keep = [col for col in keep_cols if col in df_subset.columns]
         df_subset = df_subset[cols_to_keep]
-        
+
         # subtract Onset/Finish times + adjust duration to seconds
-        time_subtract = ["Cue2Back.OnsetTime", "Cue2Back.FinishTime",
-                         "CueFix.OnsetTime", "CueFix.FinishTime",
-                         "CueTarget.OnsetTime", "CueTarget.FinishTime",
-                         "Fix.OnsetTime", "Fix.FinishTime", "Fix15sec.OnsetTime",
-                         "Stim.OnsetTime", "Stim.FinishTime"
-                         ]
-        
-        duration_subtract = ["Cue2Back.Duration", "CueFix.Duration", "CueTarget.Duration",
-                             "Fix.Duration", "Fix15sec.Duration", "Stim.Duration"
-                             ]
+        time_subtract = task_columns["time_subtract"]
+        duration_subtract = task_columns["duration_subtract"]
         
         # due to column differences for select cases, to avoid errors using try/except
         # adding 800ms to Trigger time as trigger time is when volume is collected not + 800ms duration to next volume
@@ -552,5 +516,3 @@ elif task == "nback":
         # writeout .tsv per run
         df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0{r}_events.tsv", sep='\t', index=False)
         
-        
-    
