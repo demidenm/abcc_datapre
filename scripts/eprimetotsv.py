@@ -210,7 +210,8 @@ if __name__ == "__main__":
 
         # specify columns that have the start of scanner time
         # (including initial volumes: GetReady; not calib volumes: PrepTime)
-        prep_var = "PrepTime.OffsetTime"
+        #prep_var = "PrepTime.OffsetTime" <- based on Don Hagler, ABCD implementation should be PrepTime.OnsetTime
+        prep_var = "PrepTime.OnsetTime"
         ready_var = "GetReady.RTTime"
 
         # Save the values for preptime and getready time (includes volume prep alt)
