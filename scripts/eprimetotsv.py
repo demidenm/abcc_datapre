@@ -249,7 +249,7 @@ if __name__ == "__main__":
             # Converting ms to seconds; ONLY [onset times] subtract trigger time
             time_subtract = task_columns["time_subtract"]
             
-            duration_subtract = task_columns["duration_subtract"] # leaving RT in ms
+            duration_subtract = task_columns["dur_to_sec"] # leaving RT in ms
             
             for col_time in time_subtract:
                 df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
@@ -372,7 +372,7 @@ if __name__ == "__main__":
             
             # subtract Onset/Finish times + adjust duration to seconds
             time_subtract = task_columns["time_subtract"]
-            duration_subtract = task_columns["duration_subtract"]
+            duration_subtract = task_columns["dur_to_sec"]
 
             # leaving SSDDur and StopSignal.Duration in ms ****
             for col_time in time_subtract:
@@ -505,7 +505,7 @@ if __name__ == "__main__":
 
             # subtract Onset/Finish times + adjust duration to seconds
             time_subtract = task_columns["time_subtract"]
-            duration_subtract = task_columns["duration_subtract"]
+            duration_subtract = task_columns["dur_to_sec"]
             
             # due to column differences for select cases, to avoid errors using try/except
             # adding 800ms to Trigger time as trigger time is when volume is collected not + 800ms duration to next volume

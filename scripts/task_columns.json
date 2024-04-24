@@ -9,7 +9,7 @@
                       "Feedback.OnsetTime", "FeedbackDuration",
                       "SessionDate", "TriggerTime", "TriggerTimeAlt"],
         "time_subtract": ["Cue.OnsetTime", "Anticipation.OnsetTime", "Probe.OnsetTime", "Feedback.OnsetTime"],
-        "duration_subtract": ["Cue.Duration", "Anticipation.Duration", "Probe.Duration", "FeedbackDuration"]
+        "dur_to_sec": ["Cue.Duration", "Anticipation.Duration", "Probe.Duration", "FeedbackDuration"]
     },
     "nback": {
         "keep_cols": ["Subject", "Run", "SubTrial", "Handedness", "Block", "BlockType", "StimType",
@@ -33,7 +33,7 @@
                          "CueTarget.OnsetTime", "CueTarget.FinishTime",
                          "Fix.OnsetTime", "Fix.FinishTime", "Fix15sec.OnsetTime",
                          "Stim.OnsetTime", "Stim.FinishTime"],
-        "duration_subtract": ["Cue2Back.Duration", "CueFix.Duration", "CueTarget.Duration",
+        "dur_to_sec": ["Cue2Back.Duration", "CueFix.Duration", "CueTarget.Duration",
                              "Fix.Duration", "Fix15sec.Duration", "Stim.Duration"]
     },
     "SST": {
@@ -52,6 +52,6 @@
         "time_subtract": ["BeginFix.OnsetTime", "Fix.OnsetTime", "Fix.FinishTime",
                          "Go.OnsetTime", "Go.FinishTime", "Go.StartTime", "Go.RTTime",
                          "SSD.OnsetTime", "StopSignal.OnsetTime", "StopSignal.RTTime"],
-        "duration_subtract": ["BeginFix.Duration", "Fix.Duration", "Go.Duration", "Jitter"]
+        "dur_to_sec": ["BeginFix.Duration", "Fix.Duration", "Go.Duration", "Jitter"]
     }
 }
