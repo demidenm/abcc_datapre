@@ -196,18 +196,25 @@ if __name__ == "__main__":
     except UnicodeDecodeError:
         try:
             dat = pd.read_csv(filepath, encoding='utf-16', nrows=3)
+            open_type = "csv:skip3rows-utf16"
         except pd.errors.ParserError:
             dat = pd.read_csv(filepath, encoding='utf-16', nrows=1)
+            open_type = "csv:skip1row-utf16"
         # Chech for .edat2 in row1
         if ".edat2" in dat.columns[0]:
             if "edited data" in dat.iloc[0, 0]:
                 dat = pd.read_csv(filepath, encoding='utf-16', skiprows=2, sep="\t")
+                open_type = "edat2:edited-skip2rows-utf16"
             else:
                 dat = pd.read_csv(filepath, encoding='utf-16', skiprows=1, sep="\t")
+                open_type = "edat2:edited-skip1row-utf16"
         elif "Header Start" in dat.columns[0]:
             dat = text_to_df(filepath)
+            open_type = "eprimetxt:HeaderStart-utf16"
+
         else:
             dat = pd.read_csv(filepath, encoding='utf-16', sep="\t")
+            open_type = "csv:simple-utf16"
         
     # assigned subdject ID column from NARGUID
     dat['Subject'] = dat['NARGUID']
