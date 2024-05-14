@@ -169,20 +169,28 @@ if __name__ == "__main__":
     try:
         try:
             dat = pd.read_csv(filepath, nrows=3)
+            open_type = "csv:skip3rows"
         except pd.errors.ParserError:
             dat = pd.read_csv(filepath, nrows=1)
-            
+            open_type = "csv:skip1row"
+
         # check for edat2 in row 1
         if ".edat2" in dat.columns[0]:
             # check for 2nd row with edited data.. remove if label exist need to remove redudant rows
             if "edited data" in dat.iloc[0, 0]:
                 dat = pd.read_csv(filepath, skiprows=2, sep="\t")
+                open_type = "edat2:edited-skip2rows"
+
             else:
                 dat = pd.read_csv(filepath, skiprows=1, sep="\t")
+                open_type = "edat2:skip1row"
+
         elif "Header Start" in dat.columns[0]:
             dat = text_to_df(filepath)
+            open_type = "eprimetxt:HeaderStart"
         else:
             dat = pd.read_csv(filepath, sep="\t")
+            open_type = "csv:simple"
 
     # If UTF-8 encoding fails, try reading the file with UTF-16 encoding
     except UnicodeDecodeError:
@@ -228,7 +236,7 @@ if __name__ == "__main__":
         ready_per_run = [lst[0] for lst in (dat.groupby("Run")[ready_var]
                                             .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
 
-        print("Time start column ", prep_var, " for scanner ", scanner)
+        print("Read-opt:", open_type, "start:", prep_var, "scanner:", scanner)
 
         # remove NA subtrial columns
         dat = dat[~dat['SubTrial'].isna()]
@@ -262,12 +270,12 @@ if __name__ == "__main__":
             duration_subtract = task_columns["dur_to_sec"] # leaving RT in ms
             
             for col_time in time_subtract:
-                df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
+                df_subset[col_time] = round(((df_subset[col_time] - df_subset['TriggerTimeAlt']) / 1000), 3)
 
                 # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
                 # to account for this difference in timings, adding .8 sec to onset times
                 if scanner.lower() in ['philips', 'siemens']:
-                    df_subset[col_time] = df_subset[col_time] + 0.8
+                    df_subset[col_time] = round((df_subset[col_time] + 0.8), 3)
 
                 
             for dur_time in duration_subtract:
@@ -298,9 +306,9 @@ if __name__ == "__main__":
 
         # specify columns that have the start of scanner time (including initial volumes: GetReady; not calib volumes: PrepTime)
         if 'SiemensPad.OnsetTime' in dat.columns:
-            print("If condition SiemensPad.OnsetTime for scanner ", scanner)
+            print("Read-opt:", open_type, "start: SiemensPad.OnsetTime Scanner:", scanner)
 
-            #Siemens eprime cols
+            # Siemens eprime cols
             ready_var = "SiemensPad.OnsetTime"
             prep_var = "SiemensPad.OffsetTime"
             
@@ -311,9 +319,9 @@ if __name__ == "__main__":
                                                                 [value for value in lst if pd.notna(value)]).tolist()
 
         elif 'GetReady.RTTime' in dat.columns:
-            print("If condition GetReady.RTTime for scanner ", scanner)
+            print("Read-opt:", open_type, "start: GetReady.RTTime Scanner:", scanner)
 
-            #GE columns
+            # GE columns
             ready_var = "GetReady.RTTime"
             # Save the values for preptime (main) and getready time (includes volume prep alt)
             # the eprime data has a multiple valunes in GetReady.RTTime, start of scanner is first value of list per run
@@ -324,7 +332,7 @@ if __name__ == "__main__":
                                                 .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
 
         elif any(col.startswith("Wait4Scanner") and col.endswith(".RTTime") for col in dat.columns):
-            print("If condition Wait4Scanner for scanner ", scanner)
+            print("Read-opt:", open_type, "start: Wait4Scanner+.RTTime Scanner:", scanner)
 
             #alt columns
             ready_var = [col for col in dat.columns
@@ -340,9 +348,9 @@ if __name__ == "__main__":
             prep_per_run = [prep_run1, prep_run2]
             
         elif 'Waiting4ScannerGE' in dat.columns:
-            print("If condition Waiting4ScannerGE for scanner ", scanner)
+            print("Read-opt:", open_type, "start: Wait4ScannerGE Scanner:", scanner)
 
-            #alt columns
+            # alt columns
             BeginFix_Onset = "BeginFix.OnsetTime"
             fix_start_per_run = [lst[0] for lst in (dat.groupby("Run")["BeginFix.OnsetTime"]
                                                     .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
@@ -400,13 +408,13 @@ if __name__ == "__main__":
 
             # leaving SSDDur and StopSignal.Duration in ms ****
             for col_time in time_subtract:
-                df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
+                df_subset[col_time] = round(((df_subset[col_time] - df_subset['TriggerTimeAlt']) / 1000), 3)
 
                 # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
                 # to account for this difference in timings, adding .8 sec to onset times
                 if scanner.lower() in ['philips', 'siemens']:
-                    df_subset[col_time] = df_subset[col_time] + 0.8
-                
+                    df_subset[col_time] = round((df_subset[col_time] + 0.8), 3)
+
             for dur_time in duration_subtract:
                 df_subset[dur_time] = df_subset[dur_time]/1000
 
@@ -424,7 +432,7 @@ if __name__ == "__main__":
         # creating run and trial labels using try/except. Some eprime files are written oddly, so this info isn't always avail
         # specify columns that have the start of scanner time (including initial volumes: GetReady; not calib volumes: PrepTime)
         if 'SiemensPad.OnsetTime' in dat.columns:
-            print("If condition SiemensPad.OnsetTime for scanner ", scanner)
+            print("Read-opt:", open_type, "start: SiemensPad.OnsetTime Scanner:", scanner)
 
             # Siemens eprime cols
             ready_var = "SiemensPad.OnsetTime"
@@ -450,7 +458,7 @@ if __name__ == "__main__":
         elif 'GetReady.OnsetTime' in dat.columns:
             # GE columns
             if "Waiting4Scanner.Cycle" in dat.columns:
-                print("If condition Waiting4Scanner.Cycle for scanner ", scanner)
+                print("Read-opt:", open_type, "start: Waiting4Scanner.Cycle Scanner:", scanner)
 
                 run_labs = [col for col in dat.columns if ("Waiting4Scanner" in col) and (col.endswith(".Cycle"))]
                 row_run1_start = (dat[run_labs[0]] == 1).argmax()
@@ -472,7 +480,7 @@ if __name__ == "__main__":
                 prep_per_run = [prep_run1, prep_run2]
                 
             else:
-                print("If condition GetReady.FinishTime for scanner ", scanner)
+                print("Read-opt:", open_type, "start: GetReady.FinishTime Scanner:", scanner)
 
                 ready_var = "GetReady.OnsetTime"
                 prep_var = "GetReady.FinishTime"
@@ -545,12 +553,12 @@ if __name__ == "__main__":
             # due to column differences for select cases, to avoid errors using try/except
             for col_time in time_subtract:
                 try:
-                    df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
+                    df_subset[col_time] = round(((df_subset[col_time] - df_subset['TriggerTimeAlt']) / 1000), 3)
 
                     # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
                     # to account for this difference in timings, adding .8 sec to onset times
                     if scanner.lower() in ['philips', 'siemens']:
-                        df_subset[col_time] = df_subset[col_time] + 0.8
+                        df_subset[col_time] = round((df_subset[col_time] + 0.8), 3)
 
                 except Exception as e:
                     print(f"Error processing column {col_time}: {e}")
