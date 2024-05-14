@@ -15,8 +15,13 @@ read, and metadata and data are extracted.
 This script is designed to preprocess E-Prime output data files for ABCD Study tasks like MID, SST, and nback,
 and prepare the data for subsequent analysis.
 
+In May 2024 it was confirmed by Hagler et al that there was an error in
+the timings for the timing files between scanners. Specifically, SIEMENS/Philips started the task at the last
+dummy volume + 1 TR. However, the GE scanner started the task at the last dummy volume. In the revised code,
+we now use a scanner label (if scanner in ['philips','siemens'] to determine whether to add .8 seconds to the onset time.
+
 Author: Michael Demidenko
-Date: June 2023
+Date: May 2024
 """
 
 import argparse
@@ -125,6 +130,8 @@ def parse_args():
                         help="run argument (e.g. 01, 02) with run prefix")
     parser.add_argument("-t", "--task", type=str, required=True,
                         help="task argument (e.g. MID, SST, nback)")
+    parser.add_argument("-z", "--scanner", type=str, required=True,
+                        help="scanner label (e.g. GE, Philips, SIEMENS)")
 
     return parser.parse_args()
 
@@ -144,6 +151,7 @@ if __name__ == "__main__":
     ses = args.ses
     run = args.run
     task = args.task
+    scanner = args.scanner
 
     # get json file with column names for each task and save it to task columns to use later
     py_script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -253,6 +261,15 @@ if __name__ == "__main__":
             
             for col_time in time_subtract:
                 df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
+
+                # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
+                # to account for this difference in timings, adding .8 sec to onset times
+                if scanner.lower() in ['philips', 'siemens']:
+                    print("Scanner: ", scanner)
+                    df_subset[col_time] = df_subset[col_time] + 0.8
+                else:
+                    print("Scanner: ", scanner)
+
                 
             for dur_time in duration_subtract:
                 df_subset[dur_time] = df_subset[dur_time]/1000
@@ -377,6 +394,14 @@ if __name__ == "__main__":
             # leaving SSDDur and StopSignal.Duration in ms ****
             for col_time in time_subtract:
                 df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
+
+                # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
+                # to account for this difference in timings, adding .8 sec to onset times
+                if scanner.lower() in ['philips', 'siemens']:
+                    print("Scanner: ", scanner)
+                    df_subset[col_time] = df_subset[col_time] + 0.8
+                else:
+                    print("Scanner: ", scanner)
                 
             for dur_time in duration_subtract:
                 df_subset[dur_time] = df_subset[dur_time]/1000
@@ -508,10 +533,18 @@ if __name__ == "__main__":
             duration_subtract = task_columns["dur_to_sec"]
             
             # due to column differences for select cases, to avoid errors using try/except
-            # adding 800ms to Trigger time as trigger time is when volume is collected not + 800ms duration to next volume
             for col_time in time_subtract:
                 try:
                     df_subset[col_time] = (df_subset[col_time] - df_subset['TriggerTimeAlt'])/1000
+
+                    # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
+                    # to account for this difference in timings, adding .8 sec to onset times
+                    if scanner.lower() in ['philips', 'siemens']:
+                        print("Scanner: ", scanner)
+                        df_subset[col_time] = df_subset[col_time] + 0.8
+                    else:
+                        print("Scanner: ", scanner)
+
                 except Exception as e:
                     print(f"Error processing column {col_time}: {e}")
 
