@@ -228,6 +228,8 @@ if __name__ == "__main__":
         ready_per_run = [lst[0] for lst in (dat.groupby("Run")[ready_var]
                                             .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
 
+        print("Time start column ", prep_var, " for scanner ", scanner)
+
         # remove NA subtrial columns
         dat = dat[~dat['SubTrial'].isna()]
         
@@ -265,10 +267,7 @@ if __name__ == "__main__":
                 # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
                 # to account for this difference in timings, adding .8 sec to onset times
                 if scanner.lower() in ['philips', 'siemens']:
-                    print("Scanner: ", scanner)
                     df_subset[col_time] = df_subset[col_time] + 0.8
-                else:
-                    print("Scanner: ", scanner)
 
                 
             for dur_time in duration_subtract:
@@ -299,6 +298,8 @@ if __name__ == "__main__":
 
         # specify columns that have the start of scanner time (including initial volumes: GetReady; not calib volumes: PrepTime)
         if 'SiemensPad.OnsetTime' in dat.columns:
+            print("If condition SiemensPad.OnsetTime for scanner ", scanner)
+
             #Siemens eprime cols
             ready_var = "SiemensPad.OnsetTime"
             prep_var = "SiemensPad.OffsetTime"
@@ -308,8 +309,10 @@ if __name__ == "__main__":
                                                             [value for value in lst if pd.notna(value)]).tolist()
             ready_per_run = dat.groupby("Run")[ready_var].apply(lambda lst:
                                                                 [value for value in lst if pd.notna(value)]).tolist()
-                
+
         elif 'GetReady.RTTime' in dat.columns:
+            print("If condition GetReady.RTTime for scanner ", scanner)
+
             #GE columns
             ready_var = "GetReady.RTTime"
             # Save the values for preptime (main) and getready time (includes volume prep alt)
@@ -321,6 +324,8 @@ if __name__ == "__main__":
                                                 .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
 
         elif any(col.startswith("Wait4Scanner") and col.endswith(".RTTime") for col in dat.columns):
+            print("If condition Wait4Scanner for scanner ", scanner)
+
             #alt columns
             ready_var = [col for col in dat.columns
                         if ("Wait4Scanner" in col) and (col.endswith(".RTTime"))]
@@ -335,6 +340,8 @@ if __name__ == "__main__":
             prep_per_run = [prep_run1, prep_run2]
             
         elif 'Waiting4ScannerGE' in dat.columns:
+            print("If condition Waiting4ScannerGE for scanner ", scanner)
+
             #alt columns
             BeginFix_Onset = "BeginFix.OnsetTime"
             fix_start_per_run = [lst[0] for lst in (dat.groupby("Run")["BeginFix.OnsetTime"]
@@ -398,10 +405,7 @@ if __name__ == "__main__":
                 # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
                 # to account for this difference in timings, adding .8 sec to onset times
                 if scanner.lower() in ['philips', 'siemens']:
-                    print("Scanner: ", scanner)
                     df_subset[col_time] = df_subset[col_time] + 0.8
-                else:
-                    print("Scanner: ", scanner)
                 
             for dur_time in duration_subtract:
                 df_subset[dur_time] = df_subset[dur_time]/1000
@@ -420,7 +424,9 @@ if __name__ == "__main__":
         # creating run and trial labels using try/except. Some eprime files are written oddly, so this info isn't always avail
         # specify columns that have the start of scanner time (including initial volumes: GetReady; not calib volumes: PrepTime)
         if 'SiemensPad.OnsetTime' in dat.columns:
-            #Siemens eprime cols
+            print("If condition SiemensPad.OnsetTime for scanner ", scanner)
+
+            # Siemens eprime cols
             ready_var = "SiemensPad.OnsetTime"
             prep_var = "SiemensPad.OffsetTime"
             
@@ -442,8 +448,10 @@ if __name__ == "__main__":
                                                                 [value for value in lst if pd.notna(value)]).tolist()
 
         elif 'GetReady.OnsetTime' in dat.columns:
-            #GE columns
+            # GE columns
             if "Waiting4Scanner.Cycle" in dat.columns:
+                print("If condition Waiting4Scanner.Cycle for scanner ", scanner)
+
                 run_labs = [col for col in dat.columns if ("Waiting4Scanner" in col) and (col.endswith(".Cycle"))]
                 row_run1_start = (dat[run_labs[0]] == 1).argmax()
                 row_run2_start = (dat[run_labs[1]] == 1).argmax()
@@ -464,6 +472,8 @@ if __name__ == "__main__":
                 prep_per_run = [prep_run1, prep_run2]
                 
             else:
+                print("If condition GetReady.FinishTime for scanner ", scanner)
+
                 ready_var = "GetReady.OnsetTime"
                 prep_var = "GetReady.FinishTime"
                 run_start = dat.loc[dat['Procedure[Block]'].str.startswith('TRSyncPROC')].index.tolist()
@@ -540,10 +550,7 @@ if __name__ == "__main__":
                     # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
                     # to account for this difference in timings, adding .8 sec to onset times
                     if scanner.lower() in ['philips', 'siemens']:
-                        print("Scanner: ", scanner)
                         df_subset[col_time] = df_subset[col_time] + 0.8
-                    else:
-                        print("Scanner: ", scanner)
 
                 except Exception as e:
                     print(f"Error processing column {col_time}: {e}")
