@@ -23,7 +23,7 @@ conda activate fmri_env
 # 6. Provide summary of script execution.
 
 # Script Author: Michael Demidenko
-# Date: March 2024
+# Date: May 2024
 
 
 dir=`pwd`
@@ -41,7 +41,7 @@ echo -e "Which session? Options: 2YearFollowUpYArm1, baselineYear1Arm1."
 read ses
 echo -e "Which task? Options: MID, SST, nback." 
 read task
-echo -e "Which subject ID list? Provide file with each row for ID w/o 'sub-' prefix"
+echo -e "Which subject ID list? Provide file with each row for ID w/o 'sub-' prefix & second column scanner label (GE/SIEMENS/Philips)"
 read subs
 
 echo "Options selected: ses: $ses, task: $task, sub: $subs ."
@@ -78,7 +78,10 @@ fi
 
 # run python script
 c=0
-cat ${subs} | while read sub ; do 
+cat ${subs} | while read line ; do 
+	sub=`echo $line | awk -F' ' '{ print $1}'`
+	scanner=`echo $line | awk -F' ' '{ print $2}'`
+	
 	run=01
 	file_name=sub-${sub}_ses-${ses}_task-${task}_run-${run}_bold_EventRelatedInformation.txt
 	if [ -f ${ngdr}/sourcedata/sub-${sub}/ses-${ses}/func/${file_name} ] ; then
@@ -96,13 +99,13 @@ cat ${subs} | while read sub ; do
 	echo "     Starting $sub [${c}]"
 	
 	# run python script and save error for troubleshooting 
-	error_msg=$(python ./abcc_eprimetotsv.py -i ${tmp} -o ${out} -s ${sub} -e ${ses} -r ${run} -t ${task} 2>&1 | tr -d '\n')
-    	if [[ ! -z "${error_msg}" ]]; then
+	error_msg=$(python ./eprimetotsv.py -i ${tmp} -o ${out} -s ${sub} -e ${ses} -r ${run} -t ${task} -z ${scanner} 2>&1 | tr -d '\n')
+
+    	if [[ ${error_msg} == *"Error"* ]]; then
         	echo -e "${sub}\t${ses}\t${task}\t${run}\t${curr_date}\t${error_msg}" >> ${err_log}
     	else
-		com_msg=".py script completed w/o error"
 		out_file=$(echo "${out}/sub-${sub}_ses-${ses}_task-${task}_run-${run}_events.tsv")
-		echo -e "${sub}\t${ses}\t${task}\t${run}\t${curr_date}\t${comp_msg}" >> ${out_log}
+		echo -e "${sub}\t${ses}\t${task}\t${run}\t${curr_date}\t${error_msg}" >> ${out_log}
 	fi
 	
 	rm ${tmp}/${file_name}
