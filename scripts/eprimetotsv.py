@@ -361,7 +361,7 @@ if __name__ == "__main__":
             ready_per_run = [ready_run1, ready_run2]
             prep_per_run = [prep_run1, prep_run2]
 
-            scanner_trig_col = ready_var
+            scanner_trig_col = "Wait4Scanner*RTTime"
             scanner_calibrend_col = "run-specific"
             
         elif 'Waiting4ScannerGE' in dat.columns:
@@ -384,7 +384,7 @@ if __name__ == "__main__":
                             fix_start_per_run[1]-(length_ready_var[1]*tr_time)]
             prep_per_run = [fix_start_per_run[0]-(1*tr_time), fix_start_per_run[1]-(1*tr_time)]
 
-            scanner_trig_col = ready_var
+            scanner_trig_col = "Waiting4ScannerGE"
             scanner_calibrend_col = "run-specific"
 
         # curate running Trials column for each run, drop NA columns to reduce preptime
@@ -503,7 +503,7 @@ if __name__ == "__main__":
                 ready_per_run = [ready_run1, ready_run2]
                 prep_per_run = [prep_run1, prep_run2]
 
-                scanner_trig_col = ready_var
+                scanner_trig_col = "Waiting4Scanner.Cycle"
                 scanner_calibrend_col = "run-specific"
                 
             else:
