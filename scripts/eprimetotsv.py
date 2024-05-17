@@ -279,12 +279,6 @@ if __name__ == "__main__":
             for col_time in time_subtract:
                 df_subset[col_time] = round(((df_subset[col_time] - df_subset['TriggerTimeAlt']) / 1000), 3)
 
-                # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
-                # to account for this difference in timings, adding .8 sec to onset times
-                if scanner.lower() in ['philips', 'siemens']:
-                    df_subset[col_time] = round((df_subset[col_time] + 0.8), 3)
-
-                
             for dur_time in duration_subtract:
                 df_subset[dur_time] = df_subset[dur_time]/1000
 
@@ -416,11 +410,6 @@ if __name__ == "__main__":
             # leaving SSDDur and StopSignal.Duration in ms ****
             for col_time in time_subtract:
                 df_subset[col_time] = round(((df_subset[col_time] - df_subset['TriggerTimeAlt']) / 1000), 3)
-
-                # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
-                # to account for this difference in timings, adding .8 sec to onset times
-                if scanner.lower() in ['philips', 'siemens']:
-                    df_subset[col_time] = round((df_subset[col_time] + 0.8), 3)
 
             for dur_time in duration_subtract:
                 df_subset[dur_time] = df_subset[dur_time]/1000
@@ -561,11 +550,6 @@ if __name__ == "__main__":
             for col_time in time_subtract:
                 try:
                     df_subset[col_time] = round(((df_subset[col_time] - df_subset['TriggerTimeAlt']) / 1000), 3)
-
-                    # protocol differs in time of start of task and volume, excl GE, onset times are end dummy + 1TR
-                    # to account for this difference in timings, adding .8 sec to onset times
-                    if scanner.lower() in ['philips', 'siemens']:
-                        df_subset[col_time] = round((df_subset[col_time] + 0.8), 3)
 
                 except Exception as e:
                     print(f"Error processing column {col_time}: {e}")
