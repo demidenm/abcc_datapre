@@ -244,6 +244,8 @@ if __name__ == "__main__":
                                             .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
 
         print("Read-opt:", open_type, "start:", prep_var, "scanner:", scanner)
+        scanner_trig_col = ready_var
+        scanner_calibrend_col = prep_var
 
         # remove NA subtrial columns
         dat = dat[~dat['SubTrial'].isna()]
@@ -285,6 +287,11 @@ if __name__ == "__main__":
             # create diff between scanner start and task start
             df_subset["DiffTriggerTimes"] = (df_subset["TriggerTimeAlt"]-df_subset["TriggerTime"])/1000
 
+            # write read, trigger/cali info
+            df_subset["scantrig_col"] = scanner_trig_col
+            df_subset["calibrend_col"] = scanner_calibrend_col
+            df_subset["eprime_readtype"] = open_type
+
             # writeout .tsv per run
             df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-MID_run-0{r}_events.tsv", sep='\t', index=False)
         
@@ -312,6 +319,9 @@ if __name__ == "__main__":
             # Siemens eprime cols
             ready_var = "SiemensPad.OnsetTime"
             prep_var = "SiemensPad.OffsetTime"
+
+            scanner_trig_col = ready_var
+            scanner_calibrend_col = prep_var
             
             # Save the values for preptime and getready time (includes volume prep alt)
             prep_per_run = dat.groupby("Run")[prep_var].apply(lambda lst:
@@ -332,6 +342,9 @@ if __name__ == "__main__":
             prep_per_run = [lst[-1] for lst in (dat.groupby("Run")[ready_var]
                                                 .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
 
+            scanner_trig_col = ready_var
+            scanner_calibrend_col = "run-specific"
+
         elif any(col.startswith("Wait4Scanner") and col.endswith(".RTTime") for col in dat.columns):
             print("Read-opt:", open_type, "start: Wait4Scanner+.RTTime Scanner:", scanner)
 
@@ -347,6 +360,9 @@ if __name__ == "__main__":
             # Save the values for preptime (main) and getready time (includes volume prep alt)
             ready_per_run = [ready_run1, ready_run2]
             prep_per_run = [prep_run1, prep_run2]
+
+            scanner_trig_col = ready_var
+            scanner_calibrend_col = "run-specific"
             
         elif 'Waiting4ScannerGE' in dat.columns:
             print("Read-opt:", open_type, "start: Wait4ScannerGE Scanner:", scanner)
@@ -367,6 +383,9 @@ if __name__ == "__main__":
             ready_per_run = [fix_start_per_run[0]-(length_ready_var[0]*tr_time),
                             fix_start_per_run[1]-(length_ready_var[1]*tr_time)]
             prep_per_run = [fix_start_per_run[0]-(1*tr_time), fix_start_per_run[1]-(1*tr_time)]
+
+            scanner_trig_col = ready_var
+            scanner_calibrend_col = "run-specific"
 
         # curate running Trials column for each run, drop NA columns to reduce preptime
         run_trial_cols = [col for col in dat.columns if ("TestList" in col) and (col.endswith("A") or col.endswith("B"))]
@@ -421,6 +440,11 @@ if __name__ == "__main__":
             # StopSigna.RT is missing SSDDur time, correct StopSig_RT = StopSignal.RT + SSDDur
             df_subset["StopSig_RT"] = df_subset["StopSignal.RT"] + df_subset["SSDDur"]
 
+            # write read, trigger/cali info
+            df_subset["scantrig_col"] = scanner_trig_col
+            df_subset["calibrend_col"] = scanner_calibrend_col
+            df_subset["eprime_readtype"] = open_type
+
             # writeout .tsv per run
             df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0{r}_events.tsv", sep='\t', index=False)
             
@@ -433,7 +457,10 @@ if __name__ == "__main__":
             # Siemens eprime cols
             ready_var = "SiemensPad.OnsetTime"
             prep_var = "SiemensPad.OffsetTime"
-            
+
+            scanner_trig_col = ready_var
+            scanner_calibrend_col = prep_var
+
             # run info 
             run_labs = [col for col in dat.columns if ("Waiting4Scanner" in col) and (col.endswith(".Cycle"))]
 
@@ -454,6 +481,7 @@ if __name__ == "__main__":
         elif 'GetReady.OnsetTime' in dat.columns:
             # GE columns
             if "Waiting4Scanner.Cycle" in dat.columns:
+
                 print("Read-opt:", open_type, "start: Waiting4Scanner.Cycle Scanner:", scanner)
 
                 run_labs = [col for col in dat.columns if ("Waiting4Scanner" in col) and (col.endswith(".Cycle"))]
@@ -474,6 +502,9 @@ if __name__ == "__main__":
                 # Save the values for preptime (main) and getready time (includes volume prep alt)
                 ready_per_run = [ready_run1, ready_run2]
                 prep_per_run = [prep_run1, prep_run2]
+
+                scanner_trig_col = ready_var
+                scanner_calibrend_col = "run-specific"
                 
             else:
                 print("Read-opt:", open_type, "start: GetReady.FinishTime Scanner:", scanner)
@@ -481,7 +512,10 @@ if __name__ == "__main__":
                 ready_var = "GetReady.OnsetTime"
                 prep_var = "GetReady.FinishTime"
                 run_start = dat.loc[dat['Procedure[Block]'].str.startswith('TRSyncPROC')].index.tolist()
-                
+
+                scanner_trig_col = ready_var
+                scanner_calibrend_col = prep_var
+
                 if len(run_start) > 1:
                     dat['Run'] = np.where(dat.index < run_start[1], 1, 2)
                 else:
@@ -562,7 +596,12 @@ if __name__ == "__main__":
                 
             # create diff between scanner start and task start
             df_subset["DiffTriggerTimes"] = (df_subset["TriggerTimeAlt"]-(df_subset["TriggerTime"]))/1000
-            
+
+            # write read, trigger/cali info
+            df_subset["scantrig_col"] = scanner_trig_col
+            df_subset["calibrend_col"] = scanner_calibrend_col
+            df_subset["eprime_readtype"] = open_type
+
             # writeout .tsv per run
             df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0{r}_events.tsv", sep='\t', index=False)
             
