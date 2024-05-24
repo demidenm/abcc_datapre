@@ -215,7 +215,7 @@ if __name__ == "__main__":
         else:
             dat = pd.read_csv(filepath, encoding='utf-16', sep="\t")
             open_type = "csv:simple-utf16"
-        
+
     # assigned subdject ID column from NARGUID
     dat['Subject'] = dat['NARGUID']
 
@@ -249,10 +249,10 @@ if __name__ == "__main__":
 
         # remove NA subtrial columns
         dat = dat[~dat['SubTrial'].isna()]
-        
+
         # get unique runs for loop
         uniq_runs = dat['Run'].unique().astype('int')
-        
+
         for r in uniq_runs:
             # selection the first instance over GetReady and PrepTime for each run (see grouping above)
             try:
@@ -261,23 +261,23 @@ if __name__ == "__main__":
             except (IndexError, TypeError):
                 dat['TriggerTime'] = np.tile(ready_per_run[0][r-1], len(dat))
                 dat['TriggerTimeAlt'] = np.tile(prep_per_run[0][r-1], len(dat))
-                
-            # before conversion, convert values to numeric to ensure not objects 
+
+            # before conversion, convert values to numeric to ensure not objects
             df = dat
             df_subset = convert_to_numeric(dataframe=df)
             df_subset = df[df['Run'] == r]
 
             # keep column names for the output behavioral files, modify as needed
             keep_cols = task_columns["keep_cols"]
-            
+
             cols_to_keep = [col for col in keep_cols if col in df_subset.columns]
             df_subset = df_subset[cols_to_keep]
 
             # Converting ms to seconds; ONLY [onset times] subtract trigger time
             time_subtract = task_columns["time_subtract"]
-            
+
             duration_subtract = task_columns["dur_to_sec"] # leaving RT in ms
-            
+
             for col_time in time_subtract:
                 df_subset[col_time] = round(((df_subset[col_time] - df_subset['TriggerTimeAlt']) / 1000), 3)
 
@@ -294,7 +294,7 @@ if __name__ == "__main__":
 
             # writeout .tsv per run
             df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-MID_run-0{r}_events.tsv", sep='\t', index=False)
-        
+
     elif task == "SST":
         # creating run and trial labels using try/except. Some eprime files are written oddly, so this info isn't always avail
         # need to create these columns to use for readyruns + running by run
@@ -305,7 +305,7 @@ if __name__ == "__main__":
             else:
                 dat['Run'] = dat['Block']
         except KeyError:
-            run_cols = [col for col in dat.columns 
+            run_cols = [col for col in dat.columns
                         if ("TestList" in col) and (col.endswith("A.Cycle") or col.endswith("B.Cycle"))]
             dat['Run'] = np.where(dat[run_cols[0]] == "1", 1,
                                 np.where(dat[run_cols[1]] == "1", 2, 0)).astype(int)
@@ -318,16 +318,29 @@ if __name__ == "__main__":
 
             # Siemens eprime cols
             ready_var = "SiemensPad.OnsetTime"
+            ready_late = "SiemensPad.OnsetDelay"
             prep_var = "SiemensPad.OffsetTime"
 
             scanner_trig_col = ready_var
-            scanner_calibrend_col = prep_var
-            
+            scanner_calibrend_col = 'SiemensPad.OffsetTime + delay'
+
             # Save the values for preptime and getready time (includes volume prep alt)
-            prep_per_run = dat.groupby("Run")[prep_var].apply(lambda lst:
-                                                            [value for value in lst if pd.notna(value)]).tolist()
             ready_per_run = dat.groupby("Run")[ready_var].apply(lambda lst:
                                                                 [value for value in lst if pd.notna(value)]).tolist()
+            ready_late_run = dat.groupby("Run")[ready_late].apply(lambda lst:
+                                                                  [value for value in lst if pd.notna(value)]).tolist()
+            prep_per_run = dat.groupby("Run")[prep_var].apply(lambda lst:
+                                                            [value for value in lst if pd.notna(value)]).tolist()
+
+            for i in range(len(prep_per_run)):
+                tolerance = 75
+                add_ms = 50
+                # add onset delay (late in timing), estimate ready/prep diff, siemens/philips
+                # should be ~6400ms. If diff > tolerance, add ms to calib offset to near 6.4 w/o overfitting
+                ready_per_run[i][0] = ready_per_run[i][0] - ready_late_run[i][0]
+                diff = prep_per_run[i][0] - ready_per_run[i][0]
+                if not (6400 - tolerance <= diff):
+                    prep_per_run[i][0] = prep_per_run[i][0] + add_ms
 
         elif 'GetReady.RTTime' in dat.columns:
             print("Read-opt:", open_type, "start: GetReady.RTTime Scanner:", scanner)
@@ -351,19 +364,19 @@ if __name__ == "__main__":
             #alt columns
             ready_var = [col for col in dat.columns
                         if ("Wait4Scanner" in col) and (col.endswith(".RTTime"))]
-            
+
             ready_run1 = dat.loc[dat['Run'] == 1, ready_var[0]].iloc[0]
             prep_run1 = dat.loc[dat['Run'] == 1, ready_var[0]].dropna().iloc[-1]
             ready_run2 = dat.loc[dat['Run'] == 2, ready_var[1]].iloc[0]
             prep_run2 = dat.loc[dat['Run'] == 2, ready_var[1]].dropna().iloc[-1]
-            
+
             # Save the values for preptime (main) and getready time (includes volume prep alt)
             ready_per_run = [ready_run1, ready_run2]
             prep_per_run = [prep_run1, prep_run2]
 
             scanner_trig_col = "Wait4Scanner*RTTime"
             scanner_calibrend_col = "run-specific"
-            
+
         elif 'Waiting4ScannerGE' in dat.columns:
             print("Read-opt:", open_type, "start: Wait4ScannerGE Scanner:", scanner)
 
@@ -371,7 +384,7 @@ if __name__ == "__main__":
             BeginFix_Onset = "BeginFix.OnsetTime"
             fix_start_per_run = [lst[0] for lst in (dat.groupby("Run")["BeginFix.OnsetTime"]
                                                     .apply(lambda lst: [value for value in lst if pd.notna(value)]).tolist()) if lst]
-            
+
             ready_var = "Waiting4ScannerGE"
             length_ready_var = dat.groupby('Run')['Waiting4ScannerGE'].apply(lambda x: x.notna().sum()).tolist()
 
@@ -379,7 +392,7 @@ if __name__ == "__main__":
             # the eprime data has a multiple valunes in GetReady.RTTime, start of scanner is first value of list per run
             # after initial values the onset is the last value
             tr_time = 800
-            
+
             ready_per_run = [fix_start_per_run[0]-(length_ready_var[0]*tr_time),
                             fix_start_per_run[1]-(length_ready_var[1]*tr_time)]
             prep_per_run = [fix_start_per_run[0]-(1*tr_time), fix_start_per_run[1]-(1*tr_time)]
@@ -395,13 +408,13 @@ if __name__ == "__main__":
                                     np.where(dat[run_trial_cols[1]].notnull(), dat[run_trial_cols[1]], np.nan))
         except IndexError:
             dat['Trials'] = np.where(dat[run_trial_cols[0]].notnull(), dat[run_trial_cols[0]], np.nan)
-        
+
         # Create Subtrial column remove NA subtrial columns
         dat = dat[~dat['Trials'].isna()]
-        
+
         # get unique runs for loop
         uniq_runs = dat['Run'].unique().astype('int')
-        
+
         for r in uniq_runs:
             # selection the first instance over GetReady and PrepTime for each run (see grouping above)
             try:
@@ -410,8 +423,8 @@ if __name__ == "__main__":
             except (IndexError, TypeError):
                 dat['TriggerTime'] = np.tile(ready_per_run[0][r-1], len(dat))
                 dat['TriggerTimeAlt'] = np.tile(prep_per_run[0][r-1] + .8, len(dat))
-                
-            # before conversion, convert values to numeric to ensure not objects 
+
+            # before conversion, convert values to numeric to ensure not objects
             df = dat
             df_subset = convert_to_numeric(dataframe=df)
             df_subset = df[df['Run'] == r]
@@ -456,10 +469,11 @@ if __name__ == "__main__":
 
             # Siemens eprime cols
             ready_var = "SiemensPad.OnsetTime"
+            ready_late = "SiemensPad.OnsetDelay"
             prep_var = "SiemensPad.OffsetTime"
 
             scanner_trig_col = ready_var
-            scanner_calibrend_col = prep_var
+            scanner_calibrend_col = 'SiemensPad.OffsetTime + delay'
 
             # run info 
             run_labs = [col for col in dat.columns if ("Waiting4Scanner" in col) and (col.endswith(".Cycle"))]
@@ -472,11 +486,23 @@ if __name__ == "__main__":
             else:
                 dat['Run'] = np.where(dat.index < row_run2_start, 1, 2)
 
-            # create/extract scanner ready/prep details
-            prep_per_run = dat.groupby("Run")[prep_var].apply(lambda lst:
-                                                            [value for value in lst if pd.notna(value)]).tolist()
+            # Save the values for preptime and getready time (includes volume prep alt)
             ready_per_run = dat.groupby("Run")[ready_var].apply(lambda lst:
                                                                 [value for value in lst if pd.notna(value)]).tolist()
+            ready_late_run = dat.groupby("Run")[ready_late].apply(lambda lst:
+                                                                  [value for value in lst if pd.notna(value)]).tolist()
+            prep_per_run = dat.groupby("Run")[prep_var].apply(lambda lst:
+                                                              [value for value in lst if pd.notna(value)]).tolist()
+
+            for i in range(len(prep_per_run)):
+                tolerance = 75
+                add_ms = 50
+                # add onset delay (late in timing), estimate ready/prep diff, siemens/philips
+                # should be ~6400ms. If diff > tolerance, add ms to calib offset to near 6.4 w/o overfitting
+                ready_per_run[i][0] = ready_per_run[i][0] - ready_late_run[i][0]
+                diff = prep_per_run[i][0] - ready_per_run[i][0]
+                if not (6400 - tolerance <= diff):
+                    prep_per_run[i][0] = prep_per_run[i][0] + add_ms
 
         elif 'GetReady.OnsetTime' in dat.columns:
             # GE columns
