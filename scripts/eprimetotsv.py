@@ -287,6 +287,23 @@ if __name__ == "__main__":
             # create diff between scanner start and task start
             df_subset["DiffTriggerTimes"] = (df_subset["TriggerTimeAlt"]-df_subset["TriggerTime"])/1000
 
+            # warn if diff trigger times exceed time by some length for Siemens/Philips (6.4s) and GE (12s) w/ tol 1sec
+            if scanner.lower() in ['philips', 'siemens']:
+                diff_trg_val = df_subset["DiffTriggerTimes"].iloc[0]
+                if diff_trg_val < 5.4 or diff_trg_val > 7.4:
+                    df_subset["triggertimes_warning"] = 1
+                else:
+                    df_subset["triggertimes_warning"] = 0
+
+            elif scanner.lower() in ['ge']:
+                diff_trg_val = df_subset["DiffTriggerTimes"].iloc[0]
+                if diff_trg_val < 11 or diff_trg_val > 13:
+                    df_subset["triggertimes_warning"] = 1
+                else:
+                    df_subset["triggertimes_warning"] = 0
+
+
+
             # write read, trigger/cali info
             df_subset["scantrig_col"] = scanner_trig_col
             df_subset["calibrend_col"] = scanner_calibrend_col
@@ -448,6 +465,21 @@ if __name__ == "__main__":
 
             # create diff between scanner start and task start
             df_subset["DiffTriggerTimes"] = (df_subset["TriggerTimeAlt"]-df_subset["TriggerTime"])/1000
+
+            # warn if diff trigger times exceed time by some length for Siemens/Philips (6.4s) and GE (12s) w/ tol 1sec
+            if scanner.lower() in ['philips', 'siemens']:
+                diff_trg_val = df_subset["DiffTriggerTimes"].iloc[0]
+                if diff_trg_val < 5.4 or diff_trg_val > 7.4:
+                    df_subset["triggertimes_warning"] = 1
+                else:
+                    df_subset["triggertimes_warning"] = 0
+
+            elif scanner.lower() in ['ge']:
+                diff_trg_val = df_subset["DiffTriggerTimes"].iloc[0]
+                if diff_trg_val < 11 or diff_trg_val > 13:
+                    df_subset["triggertimes_warning"] = 1
+                else:
+                    df_subset["triggertimes_warning"] = 0
 
             # Per Patrick Bissett, in e-prime implementation, StopSignal.RT is not correct ver for StopSignal Response Time
             # StopSigna.RT is missing SSDDur time, correct StopSig_RT = StopSignal.RT + SSDDur
@@ -623,6 +655,21 @@ if __name__ == "__main__":
             # create diff between scanner start and task start
             df_subset["DiffTriggerTimes"] = (df_subset["TriggerTimeAlt"]-(df_subset["TriggerTime"]))/1000
 
+            # warn if diff trigger times exceed time by some length for Siemens/Philips (6.4s) and GE (12s) w/ tol 1sec
+            if scanner.lower() in ['philips', 'siemens']:
+                diff_trg_val = df_subset["DiffTriggerTimes"].iloc[0]
+                if diff_trg_val < 5.4 or diff_trg_val > 7.4:
+                    df_subset["triggertimes_warning"] = 1
+                else:
+                    df_subset["triggertimes_warning"] = 0
+
+            elif scanner.lower() in ['ge']:
+                diff_trg_val = df_subset["DiffTriggerTimes"].iloc[0]
+                if diff_trg_val < 11 or diff_trg_val > 13:
+                    df_subset["triggertimes_warning"] = 1
+                else:
+                    df_subset["triggertimes_warning"] = 0
+
             # write read, trigger/cali info
             df_subset["scantrig_col"] = scanner_trig_col
             df_subset["calibrend_col"] = scanner_calibrend_col
@@ -630,4 +677,3 @@ if __name__ == "__main__":
 
             # writeout .tsv per run
             df_subset.to_csv(f"{out_dir}/sub-{sub}_ses-{ses}_task-{task}_run-0{r}_events.tsv", sep='\t', index=False)
-            
