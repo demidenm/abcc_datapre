@@ -152,9 +152,11 @@ if __name__ == "__main__":
                       list_runs=run_list, list_sessions=sess_list, beh_outdir=summ_out, nda_info=nda_df)
 
         for y_type in ['task_onset', 'diff_triggers']:
+            if y_type == 'task_onset':
+                add_mean = True
             for x_type in plot_by_xy[y_type]:
-                figpath_name = f'{fig_out}/task-{task}_plt-{y_type}by{x_type}.png'
+                figpath_name = f'{fig_out}/plt_task-{task}_axis-{y_type}by{x_type}.png'
                 plt_run_sess(taskname=task, x_name=x_type, y_name=y_type,
                              list_runs=run_list, list_sessions=sess_list,
                              plot_out=figpath_name, summ_path=summ_out,
-                             add_y_mean=False, x_ticksangle=75)
+                             add_y_mean=add_mean, x_ticksangle=75)
