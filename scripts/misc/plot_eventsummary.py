@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     plot_by_xy = {
         'task_onset': ['site', 'scanner', 'software', 'calibrend_col', 'trig_col', 'read_col'],
-        'diff_triggers': ['software', 'scanner', 'read_col']
+        'diff_triggers': ['software', 'scanner']
     }
 
     run_list = ['01', '02']
