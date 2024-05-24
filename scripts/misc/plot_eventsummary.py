@@ -103,9 +103,10 @@ def plt_run_sess(taskname, x_name, y_name, list_runs, list_sessions, plot_out,
             ax.set_ylabel(f'{y_name} (sec)')
             ax.legend()
 
-    fig.suptitle(f'{taskname}: Violin plot of {y_name} ~ {x_name}')
+    fig.suptitle(f'{taskname}: Boxplot of {y_name} ~ {x_name}')
     plt.tight_layout()
     plt.savefig(plot_out)
+    plt.close()
 
 
 if __name__ == "__main__":
@@ -154,6 +155,8 @@ if __name__ == "__main__":
         for y_type in ['task_onset', 'diff_triggers']:
             if y_type == 'task_onset':
                 add_mean = True
+            if y_type == 'diff_triggers':
+                add_mean = False
             for x_type in plot_by_xy[y_type]:
                 figpath_name = f'{fig_out}/plt_task-{task}_axis-{y_type}by{x_type}.png'
                 plt_run_sess(taskname=task, x_name=x_type, y_name=y_type,
