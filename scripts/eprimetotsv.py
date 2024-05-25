@@ -351,7 +351,7 @@ if __name__ == "__main__":
 
             for i in range(len(prep_per_run)):
                 tolerance = 75
-                add_ms = 50
+                add_ms = 75
                 # add onset delay (late in timing), estimate ready/prep diff, siemens/philips
                 # should be ~6400ms. If diff > tolerance, add ms to calib offset to near 6.4 w/o overfitting
                 ready_per_run[i][0] = ready_per_run[i][0] - ready_late_run[i][0]
@@ -528,7 +528,7 @@ if __name__ == "__main__":
 
             for i in range(len(prep_per_run)):
                 tolerance = 75
-                add_ms = 50
+                add_ms = 75
                 # add onset delay (late in timing), estimate ready/prep diff, siemens/philips
                 # should be ~6400ms. If diff > tolerance, add ms to calib offset to near 6.4 w/o overfitting
                 ready_per_run[i][0] = ready_per_run[i][0] - ready_late_run[i][0]
