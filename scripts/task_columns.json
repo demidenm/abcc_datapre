@@ -1,14 +1,15 @@
 {
     "MID": {
-        "keep_cols": ["Subject", "Handedness", "Run", "SubTrial", "Condition",
+        "keep_cols": ["Subject", "Handedness", "SessionDate", "Run", "SubTrial", "Condition",
                       "Cue.OnsetTime", "Cue.Duration", "Cue.OnsetToOnsetTime",
                       "Anticipation.Duration", "Anticipation.OnsetTime", "Anticipation.OnsetToOnsetTime",
                       "Probe.Duration", "Probe.OnsetTime", "Probe.OnsetToOnsetTime",
                       "TextDisplay1.OnsetTime","TextDisplay1.Duration","TextDisplay1.OnsetToOnsetTime",
-                      "Result", "prbacc", "prbrt", "OverallRT", "meanrt",
                       "moneyamt", "ResponseCheck",
                       "Feedback.OnsetTime", "FeedbackDuration", "Feedback.OnsetToOnsetTime",
-                      "SessionDate", "Probe.RESP", "TextDisplay1.RESP", "Feedback.RESP",
+                       "Probe.RESP", "TextDisplay1.RESP", "Feedback.RESP",
+                      "OverallRT", "TextDisplay1.RT", "Feedback.RT","Probe.RT",
+                      "Result", "prbacc", "prbrt", "meanrt",
                       "TriggerTime", "TriggerTimeAlt"
                     ],
         "time_subtract": ["Cue.OnsetTime", "Anticipation.OnsetTime", "Probe.OnsetTime", 
