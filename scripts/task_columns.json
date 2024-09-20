@@ -1,15 +1,24 @@
 {
     "MID": {
         "keep_cols": ["Subject", "Handedness", "Run", "SubTrial", "Condition",
-                      "Cue.OnsetTime", "Cue.Duration",
-                      "Anticipation.Duration", "Anticipation.OnsetTime",
-                      "Probe.Duration", "Probe.OnsetTime", "Probe.RESP",
+                      "Cue.OnsetTime", "Cue.Duration", "Cue.OnsetToOnsetTime",
+                      "Anticipation.Duration", "Anticipation.OnsetTime", "Anticipation.OnsetToOnsetTime",
+                      "Probe.Duration", "Probe.OnsetTime", "Probe.OnsetToOnsetTime",
+                      "TextDisplay1.OnsetTime","TextDisplay1.Duration","TextDisplay1.OnsetToOnsetTime",
                       "Result", "prbacc", "prbrt", "OverallRT", "meanrt",
                       "moneyamt", "ResponseCheck",
-                      "Feedback.OnsetTime", "FeedbackDuration",
-                      "SessionDate", "TriggerTime", "TriggerTimeAlt"],
-        "time_subtract": ["Cue.OnsetTime", "Anticipation.OnsetTime", "Probe.OnsetTime", "Feedback.OnsetTime"],
-        "dur_to_sec": ["Cue.Duration", "Anticipation.Duration", "Probe.Duration", "FeedbackDuration"]
+                      "Feedback.OnsetTime", "FeedbackDuration", "Feedback.OnsetToOnsetTime",
+                      "SessionDate", "Probe.RESP", "TextDisplay1.RESP", "Feedback.RESP",
+                      "TriggerTime", "TriggerTimeAlt"
+                    ],
+        "time_subtract": ["Cue.OnsetTime", "Anticipation.OnsetTime", "Probe.OnsetTime", 
+        "TextDisplay1.OnsetTime", "Feedback.OnsetTime", "Cue.OnsetToOnsetTime", 
+        "Anticipation.OnsetToOnsetTime", "Probe.OnsetToOnsetTime", "TextDisplay1.OnsetToOnsetTime", 
+        "Feedback.OnsetToOnsetTime"
+    ],
+        "dur_to_sec": ["Cue.Duration", "Anticipation.Duration", "Probe.Duration", 
+        "TextDisplay1.Duration", "FeedbackDuration"
+    ]
     },
     "nback": {
         "keep_cols": ["Subject", "Run", "SubTrial", "Handedness", "Block", "BlockType", "StimType",
@@ -27,14 +36,17 @@
                      "Run3Block6", "Run3Block7", "Run3Block8",
                      "Run4Block1", "Run4Block2", "Run4Block3", "Run4Block4", "Run4Block5",
                      "Run4Block6", "Run4Block7", "Run4Block8",
-                     "TriggerTime", "TriggerTimeAlt"],
+                     "TriggerTime", "TriggerTimeAlt"
+                    ],
         "time_subtract": ["Cue2Back.OnsetTime", "Cue2Back.FinishTime",
                          "CueFix.OnsetTime", "CueFix.FinishTime",
                          "CueTarget.OnsetTime", "CueTarget.FinishTime",
                          "Fix.OnsetTime", "Fix.FinishTime", "Fix15sec.OnsetTime",
-                         "Stim.OnsetTime", "Stim.FinishTime"],
+                         "Stim.OnsetTime", "Stim.FinishTime"
+                        ],
         "dur_to_sec": ["Cue2Back.Duration", "CueFix.Duration", "CueTarget.Duration",
-                             "Fix.Duration", "Fix15sec.Duration", "Stim.Duration"]
+                             "Fix.Duration", "Fix15sec.Duration", "Stim.Duration"
+                            ]
     },
     "SST": {
         "keep_cols": ["Subject", "Handedness", "Trials", "Procedure[SubTrial]", "TrialCode",
@@ -51,7 +63,9 @@
                      "TriggerTime", "TriggerTimeAlt"],
         "time_subtract": ["BeginFix.OnsetTime", "Fix.OnsetTime", "Fix.FinishTime",
                          "Go.OnsetTime", "Go.FinishTime", "Go.StartTime", "Go.RTTime",
-                         "SSD.OnsetTime", "StopSignal.OnsetTime", "StopSignal.RTTime"],
-        "dur_to_sec": ["BeginFix.Duration", "Fix.Duration", "Go.Duration", "Jitter"]
+                         "SSD.OnsetTime", "StopSignal.OnsetTime", "StopSignal.RTTime"
+                        ],
+        "dur_to_sec": ["BeginFix.Duration", "Fix.Duration", "Go.Duration", "Jitter"
+    ]
     }
 }
