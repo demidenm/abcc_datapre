@@ -17,7 +17,8 @@
     ],
         "dur_to_sec": ["Cue.Duration", "Anticipation.Duration", "Probe.Duration", 
         "TextDisplay1.Duration", "FeedbackDuration", "Cue.OnsetToOnsetTime",
-        "Anticipation.OnsetToOnsetTime","Probe.OnsetToOnsetTime","Feedback.OnsetToOnsetTime"
+        "Anticipation.OnsetToOnsetTime","Probe.OnsetToOnsetTime",
+        "TextDisplay1.OnsetToOnsetTime","Feedback.OnsetToOnsetTime"
     ]
     },
     "nback": {
