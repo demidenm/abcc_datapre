@@ -12,10 +12,8 @@
                       "Result", "prbacc", "prbrt", "meanrt",
                       "TriggerTime", "TriggerTimeAlt"
                     ],
-        "time_subtract": ["Cue.OnsetTime", "Anticipation.OnsetTime", "Probe.OnsetTime", 
-        "TextDisplay1.OnsetTime", "Feedback.OnsetTime", "Cue.OnsetToOnsetTime", 
-        "Anticipation.OnsetToOnsetTime", "Probe.OnsetToOnsetTime", "TextDisplay1.OnsetToOnsetTime", 
-        "Feedback.OnsetToOnsetTime"
+        "time_subtract": ["Cue.OnsetTime", "Anticipation.OnsetTime", 
+        "Probe.OnsetTime", "TextDisplay1.OnsetTime", "Feedback.OnsetTime", 
     ],
         "dur_to_sec": ["Cue.Duration", "Anticipation.Duration", "Probe.Duration", 
         "TextDisplay1.Duration", "FeedbackDuration"
