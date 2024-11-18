@@ -99,7 +99,7 @@ and may not have been obvious in group-level maps during testing.
 
 ### May 20, 2024
 
-It was confirmed on May 9th by the ABCD consortium that the task-scanner acquisition protocols differed slightly between GE and SIEMENS/Philips. 
+It was confirmed on May 9th by the [ABCD consortium](https://wiki.abcdstudy.org/release-notes/imaging/task-fmri.html#:~:text=degrees%20of%20freedom-,Known%20Issues%3A%20Task%20fMRI%20stimulus%20timing,-We%20have%20recently) that the task-scanner acquisition protocols differed slightly between GE and SIEMENS/Philips. 
 Specifically, the tasks started at the _last_ calibration volume (i.e., dummy volume) in GE data but _last calibration + 1TR_ in the SIEMENS/Philips scanners 
 (TR = 800ms).
 
